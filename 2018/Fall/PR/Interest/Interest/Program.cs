@@ -10,15 +10,16 @@ namespace Interest
     {
         static void Main(string[] args)
         {
-            double sum = double.Parse(Console.ReadLine());
-            double interest = double.Parse(Console.ReadLine());
-            int term = int.Parse(Console.ReadLine());
-            Console.WriteLine(Calculate(sum, interest, term).ToString());
+            string userInput = Console.ReadLine();
+            Console.WriteLine(Calculate(userInput).ToString());
         }
-        public static double Calculate(double sum, double interest, int term)
+        public static double Calculate(string userInput)
         {
-            sum = sum * Math.Pow(((1 + interest / 12 * 0.01)), term);
-            return sum;
+            string[] vars = userInput.Split(' ');
+            double sum = double.Parse(vars[0]);
+            double interest = double.Parse(vars[1]);
+            int term = int.Parse(vars[2]);
+            return sum * Math.Pow((1 + interest / 12 * 0.01), term);
         }
     }
 }
