@@ -17,7 +17,10 @@ namespace Fractals
                 g.Clear(Color.Black);
             }
 
-            DragonFractalTask.DrawDragonFractal(pixels, 100000, 123456);
+            //DragonFractalTask.DrawDragonFractal(pixels, 100000, 123456);
+            pixels.DrawToBitmap(image);
+
+            MathanFractal.DrawMathanFractal(pixels, 100000, 123456);
             pixels.DrawToBitmap(image);
 
             // При желании можно сохранить созданное изображение в файл вот так:
