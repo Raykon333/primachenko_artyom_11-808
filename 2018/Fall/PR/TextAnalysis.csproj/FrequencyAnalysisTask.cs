@@ -8,11 +8,11 @@ namespace TextAnalysis
         {
             var result = new Dictionary<string, Dictionary<string, int>>();
             int[] ns = new int[] { 2, 3 }; //размерности N-грамм
-            for (int i = 0; i < text.Count; i++)
+            foreach (var sent in text)
             {
                 foreach (var n in ns)
                 {
-                    var sentNgramms = GetNgrammsOfSentence(text[i], n);
+                    var sentNgramms = GetNgrammsOfSentence(sent, n);
                     result = UniteResult(result, sentNgramms);
                 }
             }
@@ -27,7 +27,7 @@ namespace TextAnalysis
             {
                 var ngrammStart = sent[i];
                 for (int j = 1; j < n - 1; j++) //если N-грамма состоит из трёх или больше слов
-                    ngrammStart += " " + sent[j];
+                    ngrammStart += " " + sent[i + j];
                 if (!allNgramms.ContainsKey(ngrammStart)) //если в словаре нет начала N-граммы
                     allNgramms[ngrammStart] = new Dictionary<string, int>();
                 if (!allNgramms[ngrammStart].ContainsKey(sent[i + n - 1])) //если в словаре есть начало, но нет конца N-граммы
