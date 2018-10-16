@@ -15,6 +15,7 @@ namespace Names
             // Charts.ShowHistogram(HistogramSample.GetHistogramBirthsByYear(namesData));
             Charts.ShowHistogram(HistogramTask.GetBirthsPerDayHistogram(namesData, "юрий"));
             Charts.ShowHistogram(HistogramTask.GetBirthsPerDayHistogram(namesData, "владимир"));
+            Charts.ShowHistogram(HistogramTask2.GetBirthsPerDayHistogram2(namesData, "владимир"));
             Charts.ShowHistogram(CinemaRating.GetHistogramPerRating(namesData));
             // CreativityTask.ShowYourStatistics(namesData);
             Console.WriteLine();

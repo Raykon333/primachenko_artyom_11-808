@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace TextAnalysis
 {
@@ -21,27 +19,25 @@ namespace TextAnalysis
             return ChooseNgrammsEndings(result);
         }
 
+        //найти все N-граммы предложения sent
         public static Dictionary<string, Dictionary<string, int>> GetNgrammsOfSentence(List<string> sent, int n)
         {
             var allNgramms = new Dictionary<string, Dictionary<string, int>>(); //словарь с ключами - началами N-грамм и значениями-словарями с ключами - концами N-грамм и их частотой
             for (int i = 0; i < sent.Count - n + 1; i++)
             {
                 var ngrammStart = sent[i];
-                for (int j = 1; j < n - 1; j++)
+                for (int j = 1; j < n - 1; j++) //если N-грамма состоит из трёх или больше слов
                     ngrammStart += " " + sent[j];
                 if (!allNgramms.ContainsKey(ngrammStart)) //если в словаре нет начала N-граммы
-                {
                     allNgramms[ngrammStart] = new Dictionary<string, int>();
-                    allNgramms[ngrammStart][sent[i + n - 1]] = 1;
-                }
-                else if (!allNgramms[ngrammStart].ContainsKey(sent[i + n - 1])) //если в словаре есть начало, но нет конца N-граммы
-                    allNgramms[ngrammStart][sent[i + n - 1]] = 1;
-                else //если в словаре есть и начало, и конец N-граммы
-                    allNgramms[ngrammStart][sent[i + n - 1]]++;
+                if (!allNgramms[ngrammStart].ContainsKey(sent[i + n - 1])) //если в словаре есть начало, но нет конца N-граммы
+                    allNgramms[ngrammStart][sent[i + n - 1]] = 0;
+                allNgramms[ngrammStart][sent[i + n - 1]]++;
             }
             return allNgramms;
         }
 
+        //из словаря всех окончаний N-грамм выбрать наиболее подходящий по условию
         public static Dictionary<string, string> ChooseNgrammsEndings(Dictionary<string, Dictionary<string, int>> allNgrams)
         {
             int maxCount;
@@ -66,6 +62,7 @@ namespace TextAnalysis
             return result;
         }
 
+        //объединить результат с новополученным словарём
         public static Dictionary<string, Dictionary<string, int>> UniteResult(Dictionary<string, Dictionary<string, int>> result,
             Dictionary<string, Dictionary<string, int>> sentNgramms)
         {
@@ -75,7 +72,7 @@ namespace TextAnalysis
                     result[sentNgramm.Key] = sentNgramm.Value;
                 else foreach (var sentNgrammEnd in sentNgramm.Value)
                     {
-                        if (!result[sentNgramm.Key].ContainsKey(sentNgrammEnd.Key))
+                        if (!result[sentNgramm.Key].ContainsKey(sentNgrammEnd.Key)) //если в словаре есть начало, но нет конца N-граммы
                             result[sentNgramm.Key][sentNgrammEnd.Key] = 0;
                         result[sentNgramm.Key][sentNgrammEnd.Key] += sentNgrammEnd.Value;
                     }
