@@ -11,6 +11,7 @@ namespace Col24
         static void Main(string[] args)
         {
             prime.Add(2);
+            prime.Add(3);
             int k = int.Parse(Console.ReadLine());
             int[] array = new int[k];
             for (int i = 0; i < k; i++)
@@ -33,11 +34,17 @@ namespace Col24
 
         static void TrialDivision()
         {
-            for (int j = prime[prime.Count - 1] + 1; ; j++)
+            for (int j = prime[prime.Count - 1] + 2; ; j = j + 2)
             {
                 bool check = true;
                 foreach (var x in prime)
-                    check &= j % x != 0;
+                {
+                    if (j % x == 0)
+                    {
+                        check = false;
+                        break;
+                    };
+                }
                 if (check)
                 {
                     prime.Add(j);
