@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System.Net;
 using System.IO;
 
@@ -9,11 +10,11 @@ namespace KontrlRefl2
 {
     class Comment
     {
-        public readonly int postId;
-        public readonly int id;
-        public readonly string name;
-        public readonly string email;
-        public readonly string body;
+        public int postId;
+        public int id;
+        public string name;
+        public string email;
+        public string body;
     }
 
     class ResultItem
@@ -39,7 +40,7 @@ namespace KontrlRefl2
             StreamReader reader = new StreamReader(stream);
             string content = reader.ReadToEnd();
 
-            Parallel.ForEach(((IEnumerable<Comment>)JsonConvert.DeserializeObject(content)) //десериализация
+            Parallel.ForEach(JsonConvert.DeserializeObject<IEnumerable<Comment>>(content) //десериализация
                 .Where(comment => comment.id % 2 == 0), //чётные комментарии
                 comment => result.Add(new ResultItem(comment.id,
                 comment.body.Where(character => char.IsLetter(character)).Count()))); //подсчёт букв
