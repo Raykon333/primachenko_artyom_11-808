@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 
 namespace MailDatabase
 {
     class Mail
     {
-        [Column(Order = 0)]
+        [Column(Order = 0), DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int MailId { get; internal set; }
 
         [Column(Order = 1), MaxLength(40)]
@@ -19,9 +16,8 @@ namespace MailDatabase
 
         public Mail() { }
 
-        public Mail(int mailId, string title, string content)
+        public Mail(string title, string content)
         {
-            MailId = mailId;
             Title = title;
             Content = content;
         }

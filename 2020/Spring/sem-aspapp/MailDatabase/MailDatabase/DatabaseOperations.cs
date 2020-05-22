@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Linq;
-using System.Text;
 
 namespace MailDatabase
 {
@@ -48,6 +47,14 @@ namespace MailDatabase
             }
         }
 
+        public static bool DoesMailboxExist(string mailboxName)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                return db.Mailboxes.Any(box => box.MailboxName == mailboxName);
+            }
+        }
+
         public static void AddUser(string login, string password)
         {
             using (DatabaseContext db = new DatabaseContext())
@@ -80,11 +87,80 @@ namespace MailDatabase
             {
                 if (!db.Mailboxes.Any(mailbox => mailbox.MailboxName == mailboxName))
                     throw new ArgumentException($"Mailbox {mailboxName} doesn't exist.");
-                int newMailId = db.Mails.Count();
-                var newMail = new Mail(newMailId, title, content);
-                var newMailboxToMail = new MailboxToMails(mailboxName, newMailId);
+                var newMail = new Mail(title, content);
                 db.Mails.Add(newMail);
+                db.SaveChanges();
+
+                var newMailboxToMail = new MailboxToMails(mailboxName, newMail.MailId);
                 db.MailboxesToMails.Add(newMailboxToMail);
+                db.SaveChanges();
+            }
+        }
+
+        public static List<string> GetMailboxesByUser(string userLogin)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesUserExist(userLogin))
+                    throw new ArgumentException();
+                return db.UsersToMailboxes
+                    .Where(r => r.UserLogin == userLogin)
+                    .Select(r => r.MailboxName)
+                    .ToList();
+            }
+        }
+
+        public static List<(int, string)> GetMailsAndTitlesByMailbox(string mailboxName)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesMailboxExist(mailboxName))
+                    throw new ArgumentException();
+                var result = new List<(int, string)>();
+                foreach (var mail in db.MailboxesToMails
+                    .Where(r => r.MailboxName == mailboxName)
+                    .Select(r => db.Mails
+                    .First(mail => mail.MailId == r.MailId)))
+                {
+                    result.Add((mail.MailId, mail.Title));
+                }
+                return result;
+            }
+        }
+
+        public static (string, string) GetMailTitleAndContent(int mailId)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
+                if (mail == null)
+                    throw new ArgumentException();
+                return (mail.Title, mail.Content);
+            }
+        }
+
+        public static void DeleteUser(string login)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                var deletedUser = db.Users.FirstOrDefault(u => u.Login == login);
+                if (deletedUser == null)
+                    throw new ArgumentException();
+                db.Users.Remove(deletedUser);
+                db.SaveChanges();
+            }
+        }
+
+        public static void DeleteMailbox(string mailboxName)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                var deletedMailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
+                if (deletedMailbox == null)
+                    throw new ArgumentException();
+                var deletedRship = db.UsersToMailboxes.First(r => r.MailboxName == mailboxName);
+                db.Mailboxes.Remove(deletedMailbox);
+                db.UsersToMailboxes.Remove(deletedRship);
                 db.SaveChanges();
             }
         }
