@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json;
 
 namespace MailDatabase
 {
@@ -14,12 +16,24 @@ namespace MailDatabase
         [Column(Order = 2), MaxLength(200)]
         public string Content { get; internal set; }
 
+        [Column(Order = 3)]
+        public DateTime SendingTime { get; internal set; }
+
+        [Column(Order = 4), MaxLength(30)]
+        public string SenderMBName { get; internal set; }
+
+        [Column(Order = 5)]
+        public string ReceiversMBNames { get; internal set; }
+
         public Mail() { }
 
-        public Mail(string title, string content)
+        public Mail(string title, string content, DateTime sendingTime, string senderMBName, string[] receiverMBName)
         {
             Title = title;
             Content = content;
+            SendingTime = sendingTime;
+            SenderMBName = senderMBName;
+            ReceiversMBNames = JsonSerializer.Serialize(receiverMBName);
         }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
+using System.Text.Json;
 using System.Linq;
 
 namespace MailDatabase
@@ -20,7 +21,7 @@ namespace MailDatabase
                 return Convert.ToBase64String(hashBytes);
             };
 
-        private static bool PasswordCheck(string login, string password)
+        public static bool PasswordCheck(string login, string password)
         {
             using (DatabaseContext db = new DatabaseContext())
             {
@@ -39,7 +40,7 @@ namespace MailDatabase
             }
         }
 
-        private static bool DoesUserExist(string userLogin)
+        public static bool DoesUserExist(string userLogin)
         {
             using (DatabaseContext db = new DatabaseContext())
             {
@@ -81,18 +82,34 @@ namespace MailDatabase
             }
         }
 
-        public static void AddMail(string mailboxName, string title, string content)
+        //Приватный метод, используемый в методе SendMail
+        private static void AddMail(string mailboxName, int mailId, int folderId)
         {
             using (DatabaseContext db = new DatabaseContext())
             {
                 if (!db.Mailboxes.Any(mailbox => mailbox.MailboxName == mailboxName))
                     throw new ArgumentException($"Mailbox {mailboxName} doesn't exist.");
-                var newMail = new Mail(title, content);
+
+                var newMailboxToMail = new MailboxToMails(mailboxName, mailId, folderId);
+                db.MailboxesToMails.Add(newMailboxToMail);
+                db.SaveChanges();
+            }
+        }
+
+        public static void SendMail(string title, string content, 
+            DateTime sendingTime, string senderMBname, params string[] receiversMBnames)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (receiversMBnames == null)
+                    throw new ArgumentException("Can't send to no one");
+                var newMail = new Mail(title, content, sendingTime, senderMBname, receiversMBnames);
                 db.Mails.Add(newMail);
                 db.SaveChanges();
 
-                var newMailboxToMail = new MailboxToMails(mailboxName, newMail.MailId);
-                db.MailboxesToMails.Add(newMailboxToMail);
+                AddMail(senderMBname, newMail.MailId, 1);
+                foreach(var receiver in receiversMBnames)
+                    AddMail(receiver, newMail.MailId, 0);
                 db.SaveChanges();
             }
         }
@@ -107,35 +124,6 @@ namespace MailDatabase
                     .Where(r => r.UserLogin == userLogin)
                     .Select(r => r.MailboxName)
                     .ToList();
-            }
-        }
-
-        public static List<(int, string)> GetMailsAndTitlesByMailbox(string mailboxName)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                if (!DoesMailboxExist(mailboxName))
-                    throw new ArgumentException();
-                var result = new List<(int, string)>();
-                foreach (var mail in db.MailboxesToMails
-                    .Where(r => r.MailboxName == mailboxName)
-                    .Select(r => db.Mails
-                    .First(mail => mail.MailId == r.MailId)))
-                {
-                    result.Add((mail.MailId, mail.Title));
-                }
-                return result;
-            }
-        }
-
-        public static (string, string) GetMailTitleAndContent(int mailId)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
-                if (mail == null)
-                    throw new ArgumentException();
-                return (mail.Title, mail.Content);
             }
         }
 
@@ -162,6 +150,102 @@ namespace MailDatabase
                 db.Mailboxes.Remove(deletedMailbox);
                 db.UsersToMailboxes.Remove(deletedRship);
                 db.SaveChanges();
+            }
+        }
+
+        public static void DeleteMail(int mailId)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                var deletedMail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
+                if (deletedMail == null)
+                    throw new ArgumentException();
+                db.Mails.Remove(deletedMail);
+                foreach (var rship in db.MailboxesToMails.Where(x => x.MailId == mailId))
+                    db.MailboxesToMails.Remove(rship);
+                db.SaveChanges();
+            }
+        }
+
+        public static void MoveMailToFolder(string mailboxName, int mailId, int folderId)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                var movedMailRship = db.MailboxesToMails
+                    .FirstOrDefault(m => m.MailboxName == mailboxName && m.MailId == mailId);
+                movedMailRship.FolderId = folderId;
+                db.SaveChanges();
+            }
+        }
+
+        public static IEnumerable<int> GetMailIdsFromFolder(string mailboxName, int folderId)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesMailboxExist(mailboxName))
+                    throw new ArgumentException();
+                return db.MailboxesToMails
+                    .Where(x => x.MailboxName == mailboxName && x.FolderId == folderId)
+                    .Select(x => x.MailId);
+            }
+        }
+
+        public static (string Title, string ContentPreview, string Sender, DateTime SendingTime) GetMailPreview(int mailId)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
+                if (mail == null)
+                    throw new ArgumentException();
+                return (mail.Title, mail.Content.Substring(0, 40), mail.SenderMBName, mail.SendingTime);
+            }
+        }
+
+        public static string GetMailContent(int mailId)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
+                if (mail == null)
+                    throw new ArgumentException();
+                return mail.Content;
+            }
+        }
+
+        public static string[] GetMailReceivers(int mailId)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
+                if (mail == null)
+                    throw new ArgumentException();
+                return JsonSerializer.Deserialize<string[]>(mail.ReceiversMBNames);
+            }
+        }
+
+        public static IEnumerable<int> GetFoldersInMailbox(string mailboxName)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesMailboxExist(mailboxName))
+                    throw new ArgumentException();
+                return db.FolderIdsToNames
+                    .Where(x => x.MailboxName == mailboxName)
+                    .Select(x => x.FolderId);
+            }
+        }
+
+        public static string GetFolderName(string mailboxName, int folderId)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesMailboxExist(mailboxName))
+                    throw new ArgumentException("Mailbox doesn't exist");
+                var rship = db.FolderIdsToNames
+                    .FirstOrDefault(x => x.MailboxName == mailboxName && x.FolderId == folderId);
+                if (rship == null)
+                    throw new ArgumentException("Folder doesn't exist");
+                return rship.FolderName;
             }
         }
     }

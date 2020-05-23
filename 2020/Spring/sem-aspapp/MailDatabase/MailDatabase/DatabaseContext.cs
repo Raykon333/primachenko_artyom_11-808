@@ -15,6 +15,7 @@ namespace MailDatabase
         internal DbSet<Mail> Mails { get; set; }
         internal DbSet<UserToMailboxes> UsersToMailboxes { get; set; }
         internal DbSet<MailboxToMails> MailboxesToMails { get; set; }
+        internal DbSet<FolderIdToName> FolderIdsToNames { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -44,6 +45,13 @@ namespace MailDatabase
             modelBuilder.Entity<MailboxToMails>()
                 .HasKey(o => new { o.MailboxName, o.MailId });
             modelBuilder.Entity<MailboxToMails>()
+                .HasIndex(o => o.MailboxName);
+            modelBuilder.Entity<MailboxToMails>()
+                .HasIndex(o => new { o.MailboxName, o.FolderId });
+
+            modelBuilder.Entity<FolderIdToName>()
+                .HasKey(o => new { o.MailboxName, o.FolderId });
+            modelBuilder.Entity<FolderIdToName>()
                 .HasIndex(o => o.MailboxName);
         }
 
