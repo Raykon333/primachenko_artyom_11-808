@@ -21,12 +21,12 @@ namespace GachiMail.Utilities
             {
                 if (context
                     .HttpContext.Request
-                    .Cookies.ContainsKey("LoginPassword"))
+                    .Cookies.ContainsKey("LP"))
                 {
                     var info = JsonSerializer.Deserialize<User>(context
                         .HttpContext
                         .Request
-                        .Cookies["LoginPassword"]);
+                        .Cookies["LP"]);
                     context
                         .HttpContext
                         .Session

@@ -15,8 +15,5 @@
         <input type="password" name="passconf" /><br /><br />
         <input type="submit" asp-controller="Register" asp-action="Go" value="Sign Up" />
 </form>
-@if ((bool)ViewData["Mismatch"])
-{
-    await Html.PartialAsync("PasswordMismatch");
-}
+@await  Html.PartialAsync("Error")
 

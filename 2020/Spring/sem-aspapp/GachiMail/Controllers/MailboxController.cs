@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using GachiMail.Utilities;
 using GachiMail.Utilities.Encoder;
@@ -19,7 +16,16 @@ namespace GachiMail.Controllers
         public IActionResult Incoming()
         {
             byte[] box;
+            byte[] user;
             HttpContext.Session.TryGetValue("Box", out box);
+            HttpContext.Session.TryGetValue("User", out user);
+            string us = ByteToASCIIEncoder.ReadFromBytes(user);
+            if (box == null)
+                box = ByteToASCIIEncoder
+                    .WriteToBytes(DatabaseOperations
+                    .GetMailboxesByUser(ByteToASCIIEncoder
+                    .ReadFromBytes(user))
+                    .FirstOrDefault());
             ViewData["IncomingMessages"] =
                 DatabaseOperations
                 .GetMailIdsFromFolder<IncomingLetters>(ByteToASCIIEncoder.ReadFromBytes(box))

@@ -7,9 +7,8 @@ namespace MailDatabase
     {
         readonly static string Host = "localhost";
         readonly static string Port = "5432";
-        readonly static string DatabaseName = "MailDb";
         readonly static string Username = "postgres";
-        readonly static string Password = "postgres";
+        readonly static string Password = "ja2min31";
 
         internal DbSet<User> Users { get; set; }
         internal DbSet<Mailbox> Mailboxes { get; set; }
@@ -17,14 +16,13 @@ namespace MailDatabase
         internal DbSet<UserToMailboxes> UsersToMailboxes { get; set; }
         internal DbSet<MailboxToMails> MailboxesToMails { get; set; }
         internal DbSet<FolderIdToName> FolderIdsToNames { get; set; }
-        internal DbSet<UserTrashTimer> UsersTrashTimers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
-                .HasKey(o => o.UserLogin);
+                .HasKey(o => o.Login);
             modelBuilder.Entity<User>()
-                .HasIndex(o => o.UserLogin)
+                .HasIndex(o => o.Login)
                 .IsUnique();
 
             modelBuilder.Entity<Mailbox>()
@@ -55,11 +53,6 @@ namespace MailDatabase
                 .HasKey(o => new { o.MailboxName, o.FolderId });
             modelBuilder.Entity<FolderIdToName>()
                 .HasIndex(o => o.MailboxName);
-
-            modelBuilder.Entity<UserTrashTimer>()
-                .HasKey(o => new { o.UserLogin, o.TrashTimer });
-            modelBuilder.Entity<UserTrashTimer>()
-                .HasIndex(o => o.UserLogin);
         }
 
         public DatabaseContext()
@@ -69,7 +62,7 @@ namespace MailDatabase
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql($"Host={Host};Port={Port};Database={DatabaseName};Username={Username};Password={Password}");
+            optionsBuilder.UseNpgsql($"Host={Host};Port={Port};Database=MailDb;Username={Username};Password={Password}");
         }
     }
 }
