@@ -6,6 +6,8 @@ using Microsoft.AspNetCore.Mvc;
 using GachiMail.Utilities;
 using GachiMail.Utilities.Encoder;
 using MailDatabase;
+using GachiMail.Models;
+using MailDatabase.LetterTypes;
 namespace GachiMail.Controllers
 {
     public class MailboxController : MailAccountController
@@ -20,10 +22,11 @@ namespace GachiMail.Controllers
             HttpContext.Session.TryGetValue("Box", out box);
             ViewData["IncomingMessages"] =
                 DatabaseOperations
-                .GetMailIdsFromFolder(ByteToASCIIEncoder.ReadFromBytes(box), 0);
+                .GetMailIdsFromFolder<IncomingLetters>(ByteToASCIIEncoder.ReadFromBytes(box))
+                .Select(a => new LetterPreview(a));
             return View();
         }
-        public IActionResult Sended()
+        public IActionResult Sent()
         {
             return View();
         }

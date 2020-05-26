@@ -40,15 +40,17 @@ namespace GachiMail.Utilities
                         .HttpContext
                         .Session
                         .Set("LI", Encoding.ASCII.GetBytes("false"));
-                    RedirectToAction("Index", "Login");
+                    context.Result = RedirectToAction("Index", "Login");
                 }
             }
             else
             {
+                //Здесь, например, код для того, чтобы вызвать редирект
                 byte[] value;
                 if (context.HttpContext.Session.TryGetValue("LI", out value) &&
                     Encoding.ASCII.GetString(value) == "false")
-                    RedirectToAction("Index", "Login");
+                    context.Result = RedirectToAction("Index", "Login");
+                
             }
             return base.OnActionExecutionAsync(context, next);
         }

@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Linq;
 using MailDatabase.Models;
+using MailDatabase.LetterTypes;
 namespace MailDatabase
 {
     public static class DatabaseOperations
@@ -178,16 +179,12 @@ namespace MailDatabase
             }
         }
 
-        public static IEnumerable<int> GetMailIdsFromFolder(string mailboxName, int folderId)
+        public static IEnumerable<int> GetMailIdsFromFolder<T>(string mailboxName)
+            where T: ILetterType, new()
         {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                if (!DoesMailboxExist(mailboxName))
-                    throw new ArgumentException();
-                return db.MailboxesToMails
-                    .Where(x => x.MailboxName == mailboxName && x.FolderId == folderId)
-                    .Select(x => x.MailId);
-            }
+            if (!DoesMailboxExist(mailboxName))
+                throw new ArgumentException();
+            return new T().GetLettersFromFolder(mailboxName);
         }
 
         public static (string Title, string ContentPreview, string Sender, DateTime SendingTime) GetMailPreview(int mailId)
