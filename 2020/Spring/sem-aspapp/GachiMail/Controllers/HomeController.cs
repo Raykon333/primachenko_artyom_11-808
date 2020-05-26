@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using GachiMail.Models;
 using GachiMail.Utilities;
+
 namespace GachiMail.Controllers
 {
     public class HomeController : MailAccountController
