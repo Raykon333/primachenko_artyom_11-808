@@ -27,7 +27,7 @@ namespace MailDatabase
             {
                 if (!DoesUserExist(login))
                     throw new ArgumentException($"User {login} doesn't exist");
-                string savedPasswordHash = db.Users.First(user => user.Login == login).PasswordHash;
+                string savedPasswordHash = db.Users.First(user => user.UserLogin == login).PasswordHash;
                 byte[] hashBytes = Convert.FromBase64String(savedPasswordHash);
                 byte[] salt = new byte[16];
                 Array.Copy(hashBytes, 0, salt, 0, 16);
@@ -44,7 +44,7 @@ namespace MailDatabase
         {
             using (DatabaseContext db = new DatabaseContext())
             {
-                return db.Users.Any(user => user.Login == userLogin);
+                return db.Users.Any(user => user.UserLogin == userLogin);
             }
         }
 
@@ -131,7 +131,7 @@ namespace MailDatabase
         {
             using (DatabaseContext db = new DatabaseContext())
             {
-                var deletedUser = db.Users.FirstOrDefault(u => u.Login == login);
+                var deletedUser = db.Users.FirstOrDefault(u => u.UserLogin == login);
                 if (deletedUser == null)
                     throw new ArgumentException();
                 db.Users.Remove(deletedUser);
@@ -246,6 +246,86 @@ namespace MailDatabase
                 if (rship == null)
                     throw new ArgumentException("Folder doesn't exist");
                 return rship.FolderName;
+            }
+        }
+
+        public static int GetCurrencyAmount(string userLogin)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesUserExist(userLogin))
+                    throw new ArgumentException("User doesn't exist");
+                return db.Users
+                    .First(u => u.UserLogin == userLogin)
+                    .CurrencyAmount;
+            }
+        }
+
+        public static byte GetTierLevel(string userLogin)
+        {
+            using(DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesUserExist(userLogin))
+                    throw new ArgumentException("User doesn't exist");
+                return db.Users
+                    .First(u => u.UserLogin == userLogin)
+                    .TierLevel;
+            }
+        }
+
+        public static void SetTierLevel(string userLogin, byte tierLevel)
+        {
+            using(DatabaseContext db = new DatabaseContext())
+            {
+                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
+                if (user == null)
+                    throw new ArgumentException("User doesn't exist");
+                user.TierLevel = tierLevel;
+                db.SaveChanges();
+            }
+        }
+
+        public static void AddCurrency(string userLogin, int delta)
+        {
+            using(DatabaseContext db = new DatabaseContext())
+            {
+                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
+                if (user == null)
+                    throw new ArgumentException("User doesn't exist");
+                user.CurrencyAmount += delta;
+                db.SaveChanges();
+            }
+        }
+
+        public static void SetTrashTimer(string userLogin, TimeSpan trashTimer)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesUserExist(userLogin))
+                    throw new ArgumentException("User doesn't exist");
+                var rship = db.UsersTrashTimers.FirstOrDefault(r => r.UserLogin == userLogin);
+                if (rship == null)
+                {
+                    rship = new UserTrashTimer(userLogin, trashTimer);
+                    db.UsersTrashTimers.Add(rship);
+                }
+                else
+                    rship.TrashTimer = trashTimer;
+                db.SaveChanges();
+            }
+        }
+
+        public static TimeSpan GetTrashTimer(string userLogin)
+        {
+            using (DatabaseContext db = new DatabaseContext())
+            {
+                if (!DoesUserExist(userLogin))
+                    throw new ArgumentException("User doesn't exist");
+                var rship = db.UsersTrashTimers.FirstOrDefault(r => r.UserLogin == userLogin);
+                if (rship == null)
+                    return TimeSpan.FromDays(30);
+                else
+                    return rship.TrashTimer;
             }
         }
     }
