@@ -7,15 +7,15 @@
 <div class="letter">
     <form method="post">
         <div class="title">
-            <input type="text" width=10 />
+            <input type="text" width=10 name="title"/>
         </div>
-        <div class="senders">
-            <input type="text" width=10 />
+        <div class="receivers">
+            <input type="text" width=10 name="receivers"/>
         </div>
         <div class="content">
-            <input type="text" height=30 width=10 />
+            <input type="text" height=30 width=10 name="content"/>
         </div>
-        <input type="hidden" value = @Context.Session.GetString("Box") />
+        <input type="hidden" name="sender" value = @Context.Session.GetString("Box") />
         <input type="submit" asp-area="" asp-controller="Letter" asp-action="Send" />
     </form>
 </div>
