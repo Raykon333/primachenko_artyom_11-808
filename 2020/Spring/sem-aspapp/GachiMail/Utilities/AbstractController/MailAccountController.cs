@@ -8,7 +8,7 @@ using MailDatabase;
 using GachiMail.Models;
 using System.Text;
 using System.Linq;
-
+using Microsoft.AspNetCore.Http;
 namespace GachiMail.Utilities
 {
     public abstract class MailAccountController : Controller
@@ -30,27 +30,23 @@ namespace GachiMail.Utilities
                     context
                         .HttpContext
                         .Session
-                        .Set("LI",
-                        Encoding.ASCII.GetBytes(DatabaseOperations
-                        .PasswordCheck(info.Login, info.Password).ToString()));
+                        .SetString("LI", DatabaseOperations
+                        .PasswordCheck(info.Login, info.Password).ToString());
                 }
                 else
                 {
                     context
                         .HttpContext
                         .Session
-                        .Set("LI", Encoding.ASCII.GetBytes("false"));
+                        .SetString("LI", "false");
                     context.Result = RedirectToAction("Index", "Login");
                 }
             }
             else
             {
                 //Здесь, например, код для того, чтобы вызвать редирект
-                byte[] value;
-                if (context.HttpContext.Session.TryGetValue("LI", out value) &&
-                    Encoding.ASCII.GetString(value) == "false")
+                if (context.HttpContext.Session.GetString("LI") == "false")
                     context.Result = RedirectToAction("Index", "Login");
-                
             }
             return base.OnActionExecutionAsync(context, next);
         }

@@ -1,0 +1,14 @@
+﻿@{
+    ViewData["Title"] = "MailboxCreate";
+}
+
+<h3>Create your First Mailbox</h3>
+<form method="post">
+    <label>Mailbox name^</label><br />
+    <input type="text" name="mailbox" /><br /><br />
+    <input type="hidden" name="user" value = @Context.Session.GetString("User") />
+    <input type="submit" asp-controller="Register" asp-action="MBGo" value="Create" />
+</form>
+@await Html.PartialAsync("Error")
+
+
