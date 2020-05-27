@@ -1,19 +1,18 @@
-﻿
-@model List<LetterPreview>
+﻿@model List<LetterPreview>
 @{
-    ViewData["Title"] = "Incoming";
+    ViewData["Title"] = "ListMessages";
 }
 
+<p></p>
 <div class="list-group">
     <input type="checkbox" name="selectall" />
-        @foreach(var prev in Model)
-        {
+    @foreach (var prev in Model)
+    {
         <p>
             <a class="nav-link text-dark border-bottom" asp-area="" asp-controller="Letter" asp-action="Index" asp-route-id="@prev.Id">
                 <b>@prev.Title </b>
                 <text>@prev.ContentPreview </text>
             </a>
         </p>
-        }
+    }
 </div>
-

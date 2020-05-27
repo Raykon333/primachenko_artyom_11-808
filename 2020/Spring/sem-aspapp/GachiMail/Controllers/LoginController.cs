@@ -27,7 +27,7 @@ namespace GachiMail.Controllers
                         .Response
                         .Cookies
                         .Append("LP", JsonSerializer.Serialize<User>(user));
-                return RedirectToAction("Incoming", "Mailbox");
+                return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
             }
             else
                 return RedirectToAction("Index", "Login");
