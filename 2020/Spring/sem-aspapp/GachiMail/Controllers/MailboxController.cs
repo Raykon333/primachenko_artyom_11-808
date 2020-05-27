@@ -1,13 +1,13 @@
 ﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
 using GachiMail.Utilities;
-using GachiMail.Utilities.Encoder;
 using MailDatabase;
 using GachiMail.Models;
 using MailDatabase.LetterTypes;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Reflection;
+using MailDatabase.Exceptions;
 namespace GachiMail.Controllers
 {
     public class MailboxController : MailAccountController
@@ -71,11 +71,8 @@ namespace GachiMail.Controllers
             return View("ListMessages", links);
         }
 
-        public IActionResult MailboxCreate(string user, int? code)
+        public IActionResult MailboxCreate()
         {
-            if (code != null)
-                ViewData["ErrorMessage"] = "Mailbox already exists.";
-            ViewData["User"] = user;
             return View();
         }
         [HttpPost]
@@ -87,9 +84,14 @@ namespace GachiMail.Controllers
             }
             catch (Exception ex)
             {
-                if (ex is ArgumentException)
-                    return RedirectToAction("MailboxCreate", "Mailbox", new { user = user, code = 0 });
+                if (ex is DatabaseException)
+                {
+                    HttpContext.Session.SetString("ErrorMessage", ex.Message);
+                    return RedirectToAction("MailboxCreate", "Mailbox");
+                }
             }
+            if (HttpContext.Session.Keys.Contains("ErrorMessage"))
+                HttpContext.Session.Remove("ErrorMessage");
             return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
         }
     }

@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Linq;
 using MailDatabase.Models;
 using MailDatabase.LetterTypes;
+using MailDatabase.Exceptions;
 namespace MailDatabase
 {
     public static class DatabaseOperations
@@ -36,7 +37,7 @@ namespace MailDatabase
                 byte[] hash = pbkdf2.GetBytes(20);
                 for (int i = 0; i < 20; i++)
                     if (hashBytes[i + 16] != hash[i])
-                        throw new UnauthorizedAccessException();
+                        throw new DatabaseException();
                 return true;
             }
         }

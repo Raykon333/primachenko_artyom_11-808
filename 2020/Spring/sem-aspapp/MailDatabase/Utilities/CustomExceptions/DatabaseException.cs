@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace MailDatabase
+namespace MailDatabase.Exceptions
 {
-    internal class DatabaseException : Exception
+    public class DatabaseException : Exception
     {
         public DatabaseException() { }
 

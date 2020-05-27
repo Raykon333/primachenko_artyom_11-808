@@ -1,8 +1,10 @@
-﻿using MailDatabase;
+﻿using System;
+using MailDatabase;
+using MailDatabase.Exceptions;
 using GachiMail.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
-using GachiMail.Utilities.Encoder;
+using System.Linq;
 using Microsoft.AspNetCore.Http;
 namespace GachiMail.Controllers
 {
@@ -15,17 +17,28 @@ namespace GachiMail.Controllers
         [HttpPost]
         public IActionResult Go(User user, bool savecookies)
         {
-            if (DatabaseOperations.PasswordCheck(user.Login, user.Password))
+            try
             {
-                HttpContext.Session.SetString("LI", "true");
-                HttpContext.Session.SetString("User", user.Login);
-                if(savecookies)
-                    HttpContext.Response.Cookies
-                        .Append("LP", JsonSerializer.Serialize<User>(user));
-                return RedirectToAction("ProceedToMailbox", "Mailbox");
+                DatabaseOperations.PasswordCheck(user.Login, user.Password);
             }
-            else
-                return RedirectToAction("Index", "Login");
+            catch(Exception ex)
+            {
+                if (ex is DatabaseException)
+                {
+                    HttpContext.Session.SetString("ErrorMessage", ex.Message);
+                    return RedirectToAction("Index", "Login");
+                }
+            }
+            HttpContext.Session.SetString("LI", "true");
+            HttpContext.Session.SetString("User", user.Login);
+            if(HttpContext.Session.Keys.Contains("ErrorMessage"))
+            {
+                HttpContext.Session.Remove("ErrorMessage");
+            }
+            if (savecookies)
+                HttpContext.Response.Cookies
+                    .Append("LP", JsonSerializer.Serialize<User>(user));
+            return RedirectToAction("ProceedToMailbox", "Mailbox");
         }
     }
 }

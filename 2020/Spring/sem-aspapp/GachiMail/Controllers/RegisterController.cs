@@ -3,24 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using MailDatabase;
 using System;
 using Microsoft.AspNetCore.Http;
-using GachiMail.Utilities.Encoder;
+using MailDatabase.Exceptions;
+using System.Linq;
 namespace GachiMail.Views.Register
 {
     public class RegisterController : Controller
     {
         public IActionResult Index(int? code)
         {
-            switch(code)
-            {
-                case 0:
-                    ViewData["ErrorMessage"] = "User already Exists";
-                    break;
-                case 1:
-                    ViewData["ErrorMessage"] = "Passwords don't match";
-                    break;
-                default:
-                    break;
-            }
             return View();
         }
 
@@ -29,7 +19,8 @@ namespace GachiMail.Views.Register
         {
             if (user.Password != passconf)
             {
-                return RedirectToAction("Index", "Register", new { code = 1 });
+                HttpContext.Session.SetString("ErrorMessage", "Passwords don't match");
+                return RedirectToAction("Index", "Register");
             }
             try
             {
@@ -37,9 +28,14 @@ namespace GachiMail.Views.Register
             }
             catch (Exception ex)
             {
-                if (ex is ArgumentException && ex.Message == $"User {user.Login} already exists")
-                    return RedirectToAction("Index", "Register", new { code = 0 });
+                if (ex is DatabaseException)
+                {
+                    HttpContext.Session.SetString("ErrorMessage", ex.Message);
+                    return RedirectToAction("Index", "Register");
+                }     
             }
+            if (HttpContext.Session.Keys.Contains("ErrorMessage"))
+                HttpContext.Session.Remove("ErrorMessage");
             HttpContext.Session.SetString("LI", "true");
             HttpContext.Session.SetString("User", user.Login);
             return RedirectToAction("MailboxCreate", "Mailbox", new { user = user.Login });
