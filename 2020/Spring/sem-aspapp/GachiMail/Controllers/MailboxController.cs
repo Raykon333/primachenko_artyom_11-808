@@ -26,11 +26,11 @@ namespace GachiMail.Controllers
                     .GetMailboxesByUser(ByteToASCIIEncoder
                     .ReadFromBytes(user))
                     .FirstOrDefault());
-            ViewData["IncomingMessages"] =
-                DatabaseOperations
+            var links = DatabaseOperations
                 .GetMailIdsFromFolder<IncomingLetters>(ByteToASCIIEncoder.ReadFromBytes(box))
-                .Select(a => new LetterPreview(a));
-            return View();
+                .Select(a => new LetterPreview(a))
+                .ToList();
+            return View(links);
         }
         public IActionResult Sent()
         {

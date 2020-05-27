@@ -11,7 +11,7 @@ namespace GachiMail.Views.Register
         {
             switch(code)
             {
-                case 0: 
+                case 0:
                     ViewData["ErrorMessage"] = "User already Exists";
                     break;
                 case 1:
