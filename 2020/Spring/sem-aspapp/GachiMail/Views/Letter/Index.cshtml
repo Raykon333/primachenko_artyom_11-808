@@ -1,7 +1,14 @@
-﻿
+﻿@model Letter
 @{
     ViewData["Title"] = "Index";
 }
-
-<h1>Index</h1>
+<p>Title</p>
+<p>@Model.Title</p>
+<p>Receivers</p>
+@foreach (var receiver in Model.Receivers)
+{
+    <text>@receiver</text><text>@@gachimail.com;</text><br />
+}
+<p>Content</p>
+<p>@Model.Content</p>
 

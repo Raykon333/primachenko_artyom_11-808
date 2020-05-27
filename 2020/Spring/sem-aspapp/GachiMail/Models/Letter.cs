@@ -44,7 +44,7 @@ namespace GachiMail.Models
                 return Preview.Sender;
             }
         }
-        public string[] Receveivers
+        public string[] Receivers
         {
             get
             {

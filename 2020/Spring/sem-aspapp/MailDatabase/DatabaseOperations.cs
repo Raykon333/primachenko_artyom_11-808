@@ -200,7 +200,7 @@ namespace MailDatabase
                 var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (mail == null)
                     throw new DatabaseException($"Mail id {mailId} not found");
-                return (mail.Title, mail.Content.Substring(0, 40), mail.SenderMBName, mail.SendingTime);
+                return (mail.Title, mail.Content.Substring(0, Math.Min(40, mail.Content.Length)), mail.SenderMBName, mail.SendingTime);
             }
         }
 

@@ -23,11 +23,9 @@ namespace GachiMail.Controllers
         {
             get
             {
-                if (!HttpContext.Session.Keys.Contains("Box"))
                    return DatabaseOperations
                         .GetMailboxesByUser(user)
                         .FirstOrDefault();
-                return HttpContext.Session.GetString("Box");
             }
         }
         public IActionResult Index()
@@ -40,8 +38,7 @@ namespace GachiMail.Controllers
                 return RedirectToAction("MailboxCreate");
             if (mailbox == null)
                 mailbox = box;
-            if (box != mailbox)
-                HttpContext.Session.SetString("Box", mailbox);
+            HttpContext.Session.SetString("Box", mailbox);
             return RedirectToAction("ListMessages", new { mtype = "Incoming"});
         }
 
@@ -54,7 +51,7 @@ namespace GachiMail.Controllers
         public IActionResult Incoming()
         {
             var links = DatabaseOperations
-               .GetMailIdsFromFolder<IncomingLetters>(box)
+               .GetMailIdsFromFolder<IncomingLetters>(HttpContext.Session.GetString("Box"))
                .Select(a => new LetterPreview(a))
                .ToList();
             ViewData["MessageType"] = "Incoming";
@@ -64,7 +61,7 @@ namespace GachiMail.Controllers
         public IActionResult Sent()
         {
             var links = DatabaseOperations
-                .GetMailIdsFromFolder<SentLetters>(box)
+                .GetMailIdsFromFolder<SentLetters>(HttpContext.Session.GetString("Box"))
                 .Select(a => new LetterPreview(a))
                 .ToList();
             ViewData["MessageType"] = "Sent";
