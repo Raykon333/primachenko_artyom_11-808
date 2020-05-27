@@ -5,39 +5,39 @@ using GachiMail.Utilities.Encoder;
 using MailDatabase;
 using GachiMail.Models;
 using MailDatabase.LetterTypes;
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Reflection;
 namespace GachiMail.Controllers
 {
     public class MailboxController : MailAccountController
     {
-        private byte[] user
+        private string user
         {
             get
             {
-                byte[] res;
-                HttpContext.Session.TryGetValue("User", out res);
-                return res;
+                return HttpContext.Session.GetString("User");
             }
         }
-        private byte[] box
+        private string box
         {
             get
             {
-                byte[] res;
-                HttpContext.Session.TryGetValue("Box", out res);
-                if (res == null)
-                    res = ByteToASCIIEncoder
-                        .WriteToBytes(DatabaseOperations
-                        .GetMailboxesByUser(ByteToASCIIEncoder
-                        .ReadFromBytes(user))
-                        .FirstOrDefault());
-                return res;
+                if (!HttpContext.Session.Keys.Contains("Box"))
+                   return DatabaseOperations
+                        .GetMailboxesByUser(user)
+                        .FirstOrDefault();
+                return HttpContext.Session.GetString("Box");
             }
         }
         public IActionResult Index()
         {
-            return View();
+            return View(DatabaseOperations.GetMailboxesByUser(HttpContext.Session.GetString("User")));
+        }
+        public IActionResult ProceedToMailbox(string mailbox)
+        {
+            HttpContext.Session.SetString("Box", mailbox);
+            return RedirectToAction("ListMessages", new { mtype = "Incoming" });
         }
         public IActionResult ListMessages(string mtype)
         {
@@ -47,7 +47,7 @@ namespace GachiMail.Controllers
         public IActionResult Incoming()
         {
             var links = DatabaseOperations
-               .GetMailIdsFromFolder<IncomingLetters>(ByteToASCIIEncoder.ReadFromBytes(box))
+               .GetMailIdsFromFolder<IncomingLetters>(box)
                .Select(a => new LetterPreview(a))
                .ToList();
             ViewData["MessageType"] = "Incoming";
@@ -57,7 +57,7 @@ namespace GachiMail.Controllers
         public IActionResult Sent()
         {
             var links = DatabaseOperations
-                .GetMailIdsFromFolder<SentLetters>(ByteToASCIIEncoder.ReadFromBytes(box))
+                .GetMailIdsFromFolder<SentLetters>(box)
                 .Select(a => new LetterPreview(a))
                 .ToList();
             ViewData["MessageType"] = "Sent";

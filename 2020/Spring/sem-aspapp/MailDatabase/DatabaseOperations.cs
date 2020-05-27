@@ -377,12 +377,14 @@ namespace MailDatabase
         {
             using (DatabaseContext db = new DatabaseContext())
             {
-                foreach(var mailbox in db.Mailboxes)
-                foreach (var mail in db.MailboxesToMails
-                    .Where(r => r.MailboxName == mailbox.MailboxName && r.FolderId == 2)
-                    .Select(r => db.Mails.First(m => m.MailId == r.MailId)))
+                Dictionary<string, TimeSpan> timers = new Dictionary<string, TimeSpan>();
+                foreach (var mailbox in db.Mailboxes)
+                    timers.Add(mailbox.MailboxName, mailbox.TrashTimer);
+                foreach (var rship in db.MailboxesToMails
+                    .Where(r => r.FolderId == 2))
                 {
-                    if (mail.SendingTime + mailbox.TrashTimer > DateTime.Now)
+                    var mail = db.Mails.First(m => m.MailId == rship.MailId);
+                    if (mail.SendingTime + timers[rship.MailboxName] > DateTime.Now)
                         db.Mails.Remove(mail);
                 }
                 db.SaveChanges();

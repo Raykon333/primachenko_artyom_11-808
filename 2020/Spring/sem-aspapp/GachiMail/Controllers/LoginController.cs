@@ -3,6 +3,7 @@ using GachiMail.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using GachiMail.Utilities.Encoder;
+using Microsoft.AspNetCore.Http;
 namespace GachiMail.Controllers
 {
     public class LoginController : Controller
@@ -16,16 +17,10 @@ namespace GachiMail.Controllers
         {
             if (DatabaseOperations.PasswordCheck(user.Login, user.Password))
             {
-                HttpContext
-                    .Session
-                    .Set("LI", ByteToASCIIEncoder.WriteToBytes("true"));
-                HttpContext
-                    .Session
-                    .Set("User", ByteToASCIIEncoder.WriteToBytes(user.Login));
+                HttpContext.Session.SetString("LI", "true");
+                HttpContext.Session.SetString("User", user.Login);
                 if(savecookies)
-                    HttpContext
-                        .Response
-                        .Cookies
+                    HttpContext.Response.Cookies
                         .Append("LP", JsonSerializer.Serialize<User>(user));
                 return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
             }

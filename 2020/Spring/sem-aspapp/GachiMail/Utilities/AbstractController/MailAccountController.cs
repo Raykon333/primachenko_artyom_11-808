@@ -1,13 +1,13 @@
 ﻿using System;
+using System.Text;
+using System.Linq;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
+using Microsoft.AspNetCore.Http;
 using MailDatabase;
 using GachiMail.Models;
-using System.Text;
-using System.Linq;
 
 namespace GachiMail.Utilities
 {
@@ -27,30 +27,24 @@ namespace GachiMail.Utilities
                         .HttpContext
                         .Request
                         .Cookies["LP"]);
-                    context
-                        .HttpContext
-                        .Session
-                        .Set("LI",
-                        Encoding.ASCII.GetBytes(DatabaseOperations
-                        .PasswordCheck(info.Login, info.Password).ToString()));
+                    context.HttpContext.Session
+                        .SetString("LI", DatabaseOperations
+                            .PasswordCheck(info.Login, info.Password).ToString());
+                    context.HttpContext.Session
+                        .SetString("User", info.Login);
                 }
                 else
                 {
-                    context
-                        .HttpContext
-                        .Session
-                        .Set("LI", Encoding.ASCII.GetBytes("false"));
+                    context.HttpContext.Session
+                        .SetString("LI", "false");
                     context.Result = RedirectToAction("Index", "Login");
                 }
             }
             else
             {
                 //Здесь, например, код для того, чтобы вызвать редирект
-                byte[] value;
-                if (context.HttpContext.Session.TryGetValue("LI", out value) &&
-                    Encoding.ASCII.GetString(value) == "false")
+                if (context.HttpContext.Session.GetString("LI") == "false")
                     context.Result = RedirectToAction("Index", "Login");
-                
             }
             return base.OnActionExecutionAsync(context, next);
         }

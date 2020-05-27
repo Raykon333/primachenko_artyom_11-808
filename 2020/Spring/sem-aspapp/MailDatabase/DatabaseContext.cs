@@ -9,7 +9,7 @@ namespace MailDatabase
         readonly static string Port = "5432";
         readonly static string DatabaseName = "MailDb";
         readonly static string Username = "postgres";
-        readonly static string Password = "postgres";
+        readonly static string Password = "ja2min31";
         public readonly static string ConnectionString = $"Host={Host};Port={Port};Database={DatabaseName};Username={Username};Password={Password}";
 
         internal DbSet<User> Users { get; set; }

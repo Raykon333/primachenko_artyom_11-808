@@ -10,5 +10,9 @@ namespace GachiMail.Controllers
             ViewData["Mail"] = new Letter(id);
             return View();
         }
+        public IActionResult WriteLetter()
+        {
+            return View();
+        }
     }
 }

@@ -2,7 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using MailDatabase;
 using System;
-
+using Microsoft.AspNetCore.Http;
+using GachiMail.Utilities.Encoder;
 namespace GachiMail.Views.Register
 {
     public class RegisterController : Controller
@@ -22,29 +23,6 @@ namespace GachiMail.Views.Register
             }
             return View();
         }
-        public IActionResult MailboxCreate(string user, int? code)
-        {
-            if (code != null)
-                ViewData["ErrorMessage"] = "Mailbox already exists.";
-            ViewData["User"] = user;
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult MBGo(string mailbox, string user)
-        {
-            try
-            {
-                DatabaseOperations.AddMailbox(user, mailbox);
-            }
-            catch(Exception ex)
-            {
-                if (ex is ArgumentException)
-                    return RedirectToAction("MailboxCreate", "Register", new { user = user, code = 0 });
-            }
-            return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming"});
-        }
-
         [HttpPost]
         public IActionResult Go(User user, string passconf)
         {
@@ -52,19 +30,18 @@ namespace GachiMail.Views.Register
             {
                 return RedirectToAction("Index", "Register", new { code = 1 });
             }
-            else
+            try
             {
-                try
-                {
-                    DatabaseOperations.AddUser(user.Login, user.Password);
-                }
-                catch(Exception ex)
-                {
-                    if (ex is ArgumentException && ex.Message == $"User {user.Login} already exists")
-                        return RedirectToAction("Index", "Register", new { code = 0 });
-                }
-                return RedirectToAction("MailboxCreate", "Register", new { user = user.Login });
+                DatabaseOperations.AddUser(user.Login, user.Password);
             }
+            catch (Exception ex)
+            {
+                if (ex is ArgumentException && ex.Message == $"User {user.Login} already exists")
+                    return RedirectToAction("Index", "Register", new { code = 0 });
+            }
+            HttpContext.Session.SetString("LI", "true");
+            HttpContext.Session.SetString("User", user.Login);
+            return RedirectToAction("MailboxCreate", "Mailbox", new { user = user.Login });
         }
     }
 }
