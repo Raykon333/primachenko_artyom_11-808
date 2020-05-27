@@ -7,7 +7,7 @@
     <label>Mailbox name:</label><br />
     <input type="text" name="mailbox" /><text>@@gachimail.com</text><br /><br />
     <input type="hidden" name="user" value = @ViewData["User"] />
-    <input type="submit" asp-controller="Register" asp-action="MBGo" value="Create" />
+    <input type="submit" asp-controller="Mailbox" asp-action="MBGo" value="Create" />
 </form>
 @await Html.PartialAsync("Error")
 

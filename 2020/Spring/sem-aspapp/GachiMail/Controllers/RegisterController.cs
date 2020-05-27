@@ -23,6 +23,7 @@ namespace GachiMail.Views.Register
             }
             return View();
         }
+
         [HttpPost]
         public IActionResult Go(User user, string passconf)
         {
