@@ -1,12 +1,18 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using GachiMail.Utilities;
-using GachiMail.Utilities.Encoder;
+using Microsoft.AspNetCore.Http;
 using MailDatabase;
-using GachiMail.Models;
+using MailDatabase.Exceptions;
 using MailDatabase.LetterTypes;
+<<<<<<< Updated upstream
 using System;
 using System.Reflection;
+=======
+using GachiMail.Utilities;
+using GachiMail.Models;
+
+>>>>>>> Stashed changes
 namespace GachiMail.Controllers
 {
     public class MailboxController : MailAccountController
@@ -63,5 +69,27 @@ namespace GachiMail.Controllers
             ViewData["MessageType"] = "Sent";
             return View("ListMessages", links);
         }
+<<<<<<< Updated upstream
+=======
+
+        public IActionResult MailboxCreate()
+        {
+            return View();
+        }
+        [HttpPost]
+        public IActionResult MBGo(string mailbox, string user)
+        {
+            try
+            {
+                DatabaseOperations.AddMailbox(user, mailbox);
+            }
+            catch (Exception ex)
+            {
+                if (ex is DatabaseException)
+                    return RedirectToAction("MailboxCreate", "Mailbox");
+            }
+            return RedirectToAction("ProceedToMailbox", "Mailbox");
+        }
+>>>>>>> Stashed changes
     }
 }

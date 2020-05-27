@@ -2,24 +2,18 @@
 using Microsoft.AspNetCore.Mvc;
 using MailDatabase;
 using System;
+<<<<<<< Updated upstream
 
+=======
+using Microsoft.AspNetCore.Http;
+using MailDatabase.Exceptions;
+>>>>>>> Stashed changes
 namespace GachiMail.Views.Register
 {
     public class RegisterController : Controller
     {
-        public IActionResult Index(int? code)
+        public IActionResult Index(string message)
         {
-            switch(code)
-            {
-                case 0:
-                    ViewData["ErrorMessage"] = "User already Exists";
-                    break;
-                case 1:
-                    ViewData["ErrorMessage"] = "Passwords don't match";
-                    break;
-                default:
-                    break;
-            }
             return View();
         }
         public IActionResult MailboxCreate(string user, int? code)
@@ -50,10 +44,14 @@ namespace GachiMail.Views.Register
         {
             if (user.Password != passconf)
             {
-                return RedirectToAction("Index", "Register", new { code = 1 });
+                return RedirectToAction
+                    ("Index", 
+                    "Register", 
+                    new { message = "Passwords don't match"});
             }
             else
             {
+<<<<<<< Updated upstream
                 try
                 {
                     DatabaseOperations.AddUser(user.Login, user.Password);
@@ -64,6 +62,10 @@ namespace GachiMail.Views.Register
                         return RedirectToAction("Index", "Register", new { code = 0 });
                 }
                 return RedirectToAction("MailboxCreate", "Register", new { user = user.Login });
+=======
+                if (ex is DatabaseException)
+                    return RedirectToAction("Index", "Register", new { message = ex.Message });
+>>>>>>> Stashed changes
             }
         }
     }

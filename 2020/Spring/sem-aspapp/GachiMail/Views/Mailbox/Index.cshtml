@@ -3,5 +3,31 @@
     ViewData["Title"] = "Index";
 }
 
+<<<<<<< Updated upstream
 <h1>Index</h1>
+=======
+<p>Mailboxes</p>
+<div class="list-group">
+   @using (Html.BeginForm("MailboxCreate", "Mailbox"))
+    {
+        <input type="submit"
+           size= 4
+           value="Create new mailbox"/>
+    }
+    <ul>
+       @foreach (var prev in Model)
+        {
+            <li>
+                <a class="nav-link text-dark border-bottom"
+                   asp-area=""
+                   asp-controller="Mailbox"
+                   asp-action="ProceedToMailbox"
+                   asp-route-mailbox="@prev">
+                    @prev<text>@@gachimail.com</text>
+                </a>
+            </li>
+        }
+    </ul>
+</div>
+>>>>>>> Stashed changes
 
