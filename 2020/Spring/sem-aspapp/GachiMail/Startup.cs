@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -21,6 +23,9 @@ namespace GachiMail
             services.AddControllersWithViews();
             services.AddSession();
             services.AddDistributedMemoryCache();
+
+            services.AddHangfire(config =>
+                config.UsePostgreSqlStorage(Configuration.GetConnectionString("HangfireConnection")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -39,6 +44,9 @@ namespace GachiMail
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            app.UseHangfireServer();
+            app.UseHangfireDashboard();
+
             app.UseRouting();
             app.UseSession();
             app.UseEndpoints(endpoints =>
@@ -47,6 +55,9 @@ namespace GachiMail
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
+
+            ScheduledTasks.ClearTrash();
+            ScheduledTasks.UpdateTierLevels();
         }
     }
 }

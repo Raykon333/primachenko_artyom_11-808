@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MailDatabase.Models
@@ -6,15 +7,23 @@ namespace MailDatabase.Models
     public class User
     {
         [Column(Order = 0), MaxLength(20)]
-        public string Login { get; internal set; }
+        public string UserLogin { get; internal set; }
 
         public string PasswordHash { get; internal set; }
 
+        public int CurrencyAmount { get; internal set; }
+
+        public byte Tier { get; internal set; }
+
+        public DateTime TierEndDate { get; internal set; }
+
         public User() { }
-        public User(string login, string passwordHash)
+        public User(string userLogin, string passwordHash)
         {
-            Login = login;
+            UserLogin = userLogin;
             PasswordHash = passwordHash;
+            CurrencyAmount = 0;
+            Tier = 0;
         }
     }
 }

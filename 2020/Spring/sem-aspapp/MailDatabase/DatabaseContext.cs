@@ -7,8 +7,10 @@ namespace MailDatabase
     {
         readonly static string Host = "localhost";
         readonly static string Port = "5432";
+        readonly static string DatabaseName = "MailDb";
         readonly static string Username = "postgres";
-        readonly static string Password = "ja2min31";
+        readonly static string Password = "postgres";
+        public readonly static string ConnectionString = $"Host={Host};Port={Port};Database={DatabaseName};Username={Username};Password={Password}";
 
         internal DbSet<User> Users { get; set; }
         internal DbSet<Mailbox> Mailboxes { get; set; }
@@ -20,9 +22,9 @@ namespace MailDatabase
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<User>()
-                .HasKey(o => o.Login);
+                .HasKey(o => o.UserLogin);
             modelBuilder.Entity<User>()
-                .HasIndex(o => o.Login)
+                .HasIndex(o => o.UserLogin)
                 .IsUnique();
 
             modelBuilder.Entity<Mailbox>()
@@ -62,7 +64,7 @@ namespace MailDatabase
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseNpgsql($"Host={Host};Port={Port};Database=MailDb;Username={Username};Password={Password}");
+            optionsBuilder.UseNpgsql(ConnectionString);
         }
     }
 }
