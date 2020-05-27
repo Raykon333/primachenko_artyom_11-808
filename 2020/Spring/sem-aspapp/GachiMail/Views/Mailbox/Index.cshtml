@@ -5,8 +5,14 @@
 
 <p>Mailboxes</p>
 <div class="list-group">
+   @using (Html.BeginForm("MailboxCreate", "Mailbox", new { user = Context.Session.GetString("User") }))
+    {
+        <input type="submit"
+           size="4"
+           value="Create new mailbox"/>
+    }
     <ul>
-        @foreach (var prev in Model)
+       @foreach (var prev in Model)
         {
             <li>
                 <a class="nav-link text-dark border-bottom"

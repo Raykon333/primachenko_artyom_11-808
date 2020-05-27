@@ -55,7 +55,6 @@ namespace GachiMail
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
-
             ScheduledTasks.ClearTrash();
             ScheduledTasks.UpdateTierLevels();
         }

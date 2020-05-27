@@ -34,35 +34,18 @@ namespace GachiMail.Controllers
         {
             return View(DatabaseOperations.GetMailboxesByUser(HttpContext.Session.GetString("User")));
         }
-
         public IActionResult ProceedToMailbox(string mailbox)
         {
-            HttpContext.Session.SetString("Box", mailbox);
+            if (box == null)
+                return RedirectToAction("MailboxCreate", new { user = user });
+            if (mailbox == null)
+                mailbox = box;
+            if (box != mailbox)
+                HttpContext.Session.SetString("Box", mailbox);
             return RedirectToAction("ListMessages", new { mtype = "Incoming"});
         }
 
-        public IActionResult MailboxCreate(string user, int? code)
-        {
-            if (code != null)
-                ViewData["ErrorMessage"] = "Mailbox already exists.";
-            ViewData["User"] = user;
-            return View();
-        }
 
-        [HttpPost]
-        public IActionResult MBGo(string mailbox, string user)
-        {
-            try
-            {
-                DatabaseOperations.AddMailbox(user, mailbox);
-            }
-            catch (Exception ex)
-            {
-                if (ex is ArgumentException)
-                    return RedirectToAction("MailboxCreate", "Mailbox", new { user = user, code = 0 });
-            }
-            return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
-        }
         public IActionResult ListMessages(string mtype)
         {
             return (IActionResult)GetType().GetMethod(mtype).Invoke(this, null);
@@ -86,6 +69,28 @@ namespace GachiMail.Controllers
                 .ToList();
             ViewData["MessageType"] = "Sent";
             return View("ListMessages", links);
+        }
+
+        public IActionResult MailboxCreate(string user, int? code)
+        {
+            if (code != null)
+                ViewData["ErrorMessage"] = "Mailbox already exists.";
+            ViewData["User"] = user;
+            return View();
+        }
+        [HttpPost]
+        public IActionResult MBGo(string mailbox, string user)
+        {
+            try
+            {
+                DatabaseOperations.AddMailbox(user, mailbox);
+            }
+            catch (Exception ex)
+            {
+                if (ex is ArgumentException)
+                    return RedirectToAction("MailboxCreate", "Mailbox", new { user = user, code = 0 });
+            }
+            return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
         }
     }
 }

@@ -22,7 +22,7 @@ namespace GachiMail.Controllers
                 if(savecookies)
                     HttpContext.Response.Cookies
                         .Append("LP", JsonSerializer.Serialize<User>(user));
-                return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
+                return RedirectToAction("ProceedToMailbox", "Mailbox");
             }
             else
                 return RedirectToAction("Index", "Login");

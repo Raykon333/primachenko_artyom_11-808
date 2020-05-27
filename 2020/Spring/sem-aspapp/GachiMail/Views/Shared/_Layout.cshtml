@@ -20,9 +20,9 @@
                     @if (Context.Session.Keys.Contains("User"))
                     {
                         <div class="navbar-nav flex-grow-0">
-                            <a class="nav-link text-dark" 
-                               asp-area="" 
-                               asp-controller="Mailbox" 
+                            <a class="nav-link text-dark"
+                               asp-area=""
+                               asp-controller="Mailbox"
                                asp-action="Index"> @Context.Session.GetString("User") </a>
                         </div>
                     }
@@ -30,15 +30,15 @@
                     {
                         <ul class="navbar-nav flex-grow-2">
                             <li class="nav-item">
-                                <a class="nav-link text-dark" 
-                                   asp-area="" 
-                                   asp-controller="Login" 
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="Login"
                                    asp-action="Index">Login</a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-dark" 
-                                   asp-area="" 
-                                   asp-controller="Register" 
+                                <a class="nav-link text-dark"
+                                   asp-area=""
+                                   asp-controller="Register"
                                    asp-action="Index">Register</a>
                             </li>
                         </ul>
@@ -47,24 +47,28 @@
             </div>
         </nav>
     </header>
+   @if (Context.Session.Keys.Contains("User"))
+    {
     <div class="dropdown-menu-left border-right position-fixed dropleft">
         <menu>
             <menuitem class="nav-item">
-                <a class="nav-link text-dark border-bottom" 
-                   asp-area="" 
-                   asp-controller="Mailbox"
-                   asp-action="ListMessages" 
-                   asp-route-mtype="Incoming">Incoming</a>
+                <a class="nav-link text-dark border-bottom"
+                    asp-area=""
+                    asp-controller="Mailbox"
+                    asp-action="ListMessages"
+                    asp-route-mtype="Incoming">Incoming</a>
             </menuitem>
             <menuitem class="nav-item">
-                <a class="nav-link text-dark border-bottom" 
-                   asp-area="" 
-                   asp-controller="Mailbox" 
-                   asp-action="ListMessages" 
-                   asp-route-mtype="Sent">Sent</a>
+                <a class="nav-link text-dark border-bottom"
+                    asp-area=""
+                    asp-controller="Mailbox"
+                    asp-action="ListMessages"
+                    asp-route-mtype="Sent">Sent</a>
             </menuitem>
         </menu>
     </div>
+    }
+    
     <div class="container">
         <main role="main" class="pb-3 position-fixed">
             @RenderBody()
