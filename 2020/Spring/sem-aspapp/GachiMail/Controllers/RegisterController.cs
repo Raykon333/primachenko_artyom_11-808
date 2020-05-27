@@ -11,7 +11,7 @@ namespace GachiMail.Views.Register
         {
             switch(code)
             {
-                case 0: 
+                case 0:
                     ViewData["ErrorMessage"] = "User already Exists";
                     break;
                 case 1:
@@ -42,7 +42,7 @@ namespace GachiMail.Views.Register
                 if (ex is ArgumentException)
                     return RedirectToAction("MailboxCreate", "Register", new { user = user, code = 0 });
             }
-            return RedirectToAction("Incoming", "Mailbox", new { box = mailbox});
+            return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming"});
         }
 
         [HttpPost]
