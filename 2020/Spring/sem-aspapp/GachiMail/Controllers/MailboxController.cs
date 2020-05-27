@@ -37,7 +37,7 @@ namespace GachiMail.Controllers
         public IActionResult ProceedToMailbox(string mailbox)
         {
             if (box == null)
-                return RedirectToAction("MailboxCreate", new { user = user });
+                return RedirectToAction("MailboxCreate");
             if (mailbox == null)
                 mailbox = box;
             if (box != mailbox)
@@ -87,12 +87,12 @@ namespace GachiMail.Controllers
                 if (ex is DatabaseException)
                 {
                     HttpContext.Session.SetString("ErrorMessage", ex.Message);
-                    return RedirectToAction("MailboxCreate", "Mailbox");
+                    return RedirectToAction("MailboxCreate");
                 }
             }
             if (HttpContext.Session.Keys.Contains("ErrorMessage"))
                 HttpContext.Session.Remove("ErrorMessage");
-            return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
+            return RedirectToAction("ProceedToMailbox");
         }
     }
 }

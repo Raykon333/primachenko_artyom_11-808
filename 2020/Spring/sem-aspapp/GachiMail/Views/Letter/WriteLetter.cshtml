@@ -2,6 +2,24 @@
 @{
     ViewData["Title"] = "WriteLetter";
 }
+<<<<<<< HEAD
 
 <h1>WriteLetter</h1>
+=======
+<div class="letter">
+    <form method="post">
+        <div class="title">
+            <input type="text" width=10 />
+        </div>
+        <div class="senders">
+            <input type="text" width=10 />
+        </div>
+        <div class="content">
+            <input type="text" height=30 width=10 />
+        </div>
+        <input type="hidden" value = @Context.Session.GetString("Box") />
+        <input type="submit" asp-area="" asp-controller="Letter" asp-action="Send" />
+    </form>
+</div>
+>>>>>>> Alternative
 

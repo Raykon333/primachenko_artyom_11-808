@@ -47,28 +47,28 @@
             </div>
         </nav>
     </header>
-   @if (Context.Session.Keys.Contains("User"))
+    @if (Context.Session.Keys.Contains("User"))
     {
-    <div class="dropdown-menu-left border-right position-fixed dropleft">
-        <menu>
-            <menuitem class="nav-item">
-                <a class="nav-link text-dark border-bottom"
-                    asp-area=""
-                    asp-controller="Mailbox"
-                    asp-action="ListMessages"
-                    asp-route-mtype="Incoming">Incoming</a>
-            </menuitem>
-            <menuitem class="nav-item">
-                <a class="nav-link text-dark border-bottom"
-                    asp-area=""
-                    asp-controller="Mailbox"
-                    asp-action="ListMessages"
-                    asp-route-mtype="Sent">Sent</a>
-            </menuitem>
-        </menu>
-    </div>
+        <div class="dropdown-menu-left border-right position-fixed dropleft">
+            <menu>
+                <menuitem class="nav-item">
+                    <a class="nav-link text-dark border-bottom"
+                       asp-area=""
+                       asp-controller="Mailbox"
+                       asp-action="ListMessages"
+                       asp-route-mtype="Incoming">Incoming</a>
+                </menuitem>
+                <menuitem class="nav-item">
+                    <a class="nav-link text-dark border-bottom"
+                       asp-area=""
+                       asp-controller="Mailbox"
+                       asp-action="ListMessages"
+                       asp-route-mtype="Sent">Sent</a>
+                </menuitem>
+            </menu>
+        </div>
     }
-    
+
     <div class="container">
         <main role="main" class="pb-3 position-fixed">
             @RenderBody()

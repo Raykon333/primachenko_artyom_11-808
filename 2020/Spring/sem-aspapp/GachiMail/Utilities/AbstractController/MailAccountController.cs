@@ -1,14 +1,14 @@
 ﻿using System;
-using System.Text;
-using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.AspNetCore.Http;
 using MailDatabase;
 using GachiMail.Models;
-
+using System.Text;
+using System.Linq;
+using Microsoft.AspNetCore.Http;
 namespace GachiMail.Utilities
 {
     public abstract class MailAccountController : Controller
@@ -27,15 +27,17 @@ namespace GachiMail.Utilities
                         .HttpContext
                         .Request
                         .Cookies["LP"]);
-                    context.HttpContext.Session
+                    context
+                        .HttpContext
+                        .Session
                         .SetString("LI", DatabaseOperations
-                            .PasswordCheck(info.Login, info.Password).ToString());
-                    context.HttpContext.Session
-                        .SetString("User", info.Login);
+                        .PasswordCheck(info.Login, info.Password).ToString());
                 }
                 else
                 {
-                    context.HttpContext.Session
+                    context
+                        .HttpContext
+                        .Session
                         .SetString("LI", "false");
                     context.Result = RedirectToAction("Index", "Login");
                 }

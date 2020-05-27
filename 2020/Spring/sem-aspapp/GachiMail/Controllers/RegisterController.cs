@@ -9,7 +9,7 @@ namespace GachiMail.Views.Register
 {
     public class RegisterController : Controller
     {
-        public IActionResult Index(int? code)
+        public IActionResult Index()
         {
             return View();
         }
@@ -38,7 +38,7 @@ namespace GachiMail.Views.Register
                 HttpContext.Session.Remove("ErrorMessage");
             HttpContext.Session.SetString("LI", "true");
             HttpContext.Session.SetString("User", user.Login);
-            return RedirectToAction("MailboxCreate", "Mailbox", new { user = user.Login });
+            return RedirectToAction("MailboxCreate", "Mailbox");
         }
     }
 }

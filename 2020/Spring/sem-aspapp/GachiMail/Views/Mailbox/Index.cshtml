@@ -5,7 +5,7 @@
 
 <p>Mailboxes</p>
 <div class="list-group">
-   @using (Html.BeginForm("MailboxCreate", "Mailbox", new { user = Context.Session.GetString("User") }))
+   @using (Html.BeginForm("MailboxCreate", "Mailbox"))
     {
         <input type="submit"
            size="4"

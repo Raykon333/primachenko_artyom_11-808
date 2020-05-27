@@ -23,13 +23,13 @@ namespace MailDatabase
                 return Convert.ToBase64String(hashBytes);
             };
 
-        public static bool PasswordCheck(string userLogin, string password)
+        public static bool PasswordCheck(string login, string password)
         {
             using (DatabaseContext db = new DatabaseContext())
             {
-                if (!DoesUserExist(userLogin))
-                    throw new DatabaseException("User doesn't exist");
-                string savedPasswordHash = db.Users.First(user => user.UserLogin == userLogin).PasswordHash;
+                if (!DoesUserExist(login))
+                    throw new ArgumentException($"User {login} doesn't exist");
+                string savedPasswordHash = db.Users.First(user => user.Login == login).PasswordHash;
                 byte[] hashBytes = Convert.FromBase64String(savedPasswordHash);
                 byte[] salt = new byte[16];
                 Array.Copy(hashBytes, 0, salt, 0, 16);
@@ -37,7 +37,7 @@ namespace MailDatabase
                 byte[] hash = pbkdf2.GetBytes(20);
                 for (int i = 0; i < 20; i++)
                     if (hashBytes[i + 16] != hash[i])
-                        throw new DatabaseException();
+                        throw new DatabaseException("Wrong password");
                 return true;
             }
         }
@@ -46,7 +46,7 @@ namespace MailDatabase
         {
             using (DatabaseContext db = new DatabaseContext())
             {
-                return db.Users.Any(user => user.UserLogin == userLogin);
+                return db.Users.Any(user => user.Login == userLogin);
             }
         }
 
@@ -63,7 +63,7 @@ namespace MailDatabase
             using (DatabaseContext db = new DatabaseContext())
             {
                 if (DoesUserExist(login))
-                    throw new DatabaseException($"User {login} already exists");
+                    throw new ArgumentException($"User {login} already exists");
                 var newUser = new User(login, DefaultPasswordHashFunction(password));
                 db.Users.Add(newUser);
                 db.SaveChanges();
@@ -75,7 +75,7 @@ namespace MailDatabase
             using (DatabaseContext db = new DatabaseContext())
             {
                 if (db.Mailboxes.Any(mailbox => mailbox.MailboxName == mailboxName))
-                    throw new DatabaseException($"Name {mailboxName} is already taken.");
+                    throw new ArgumentException($"Name {mailboxName} is already taken.");
                 var newMailbox = new Mailbox(mailboxName);
                 var newUserToMailbox = new UserToMailboxes(userLogin, mailboxName);
                 db.Mailboxes.Add(newMailbox);
@@ -90,7 +90,7 @@ namespace MailDatabase
             using (DatabaseContext db = new DatabaseContext())
             {
                 if (!db.Mailboxes.Any(mailbox => mailbox.MailboxName == mailboxName))
-                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
+                    throw new ArgumentException($"Mailbox {mailboxName} doesn't exist.");
 
                 var newMailboxToMail = new MailboxToMails(mailboxName, mailId, folderId);
                 db.MailboxesToMails.Add(newMailboxToMail);
@@ -104,7 +104,7 @@ namespace MailDatabase
             using (DatabaseContext db = new DatabaseContext())
             {
                 if (receiversMBnames == null)
-                    throw new DatabaseException("Can't send to no one");
+                    throw new ArgumentException("Can't send to no one");
                 var newMail = new Mail(title, content, sendingTime, senderMBname, receiversMBnames);
                 db.Mails.Add(newMail);
                 db.SaveChanges();
@@ -121,7 +121,7 @@ namespace MailDatabase
             using (DatabaseContext db = new DatabaseContext())
             {
                 if (!DoesUserExist(userLogin))
-                    throw new DatabaseException($"User {userLogin} doesn't exist.");
+                    throw new ArgumentException();
                 return db.UsersToMailboxes
                     .Where(r => r.UserLogin == userLogin)
                     .Select(r => r.MailboxName)
@@ -129,13 +129,13 @@ namespace MailDatabase
             }
         }
 
-        public static void DeleteUser(string userLogin)
+        public static void DeleteUser(string login)
         {
             using (DatabaseContext db = new DatabaseContext())
             {
-                var deletedUser = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
+                var deletedUser = db.Users.FirstOrDefault(u => u.Login == login);
                 if (deletedUser == null)
-                    throw new DatabaseException($"User {userLogin} doesn't exist.");
+                    throw new ArgumentException();
                 db.Users.Remove(deletedUser);
                 db.SaveChanges();
             }
@@ -147,7 +147,7 @@ namespace MailDatabase
             {
                 var deletedMailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
                 if (deletedMailbox == null)
-                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
+                    throw new ArgumentException();
                 var deletedRship = db.UsersToMailboxes.First(r => r.MailboxName == mailboxName);
                 db.Mailboxes.Remove(deletedMailbox);
                 db.UsersToMailboxes.Remove(deletedRship);
@@ -161,7 +161,7 @@ namespace MailDatabase
             {
                 var deletedMail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (deletedMail == null)
-                    throw new DatabaseException($"Mail id {mailId} not found");
+                    throw new ArgumentException();
                 db.Mails.Remove(deletedMail);
                 foreach (var rship in db.MailboxesToMails.Where(x => x.MailId == mailId))
                     db.MailboxesToMails.Remove(rship);
@@ -173,12 +173,8 @@ namespace MailDatabase
         {
             using (DatabaseContext db = new DatabaseContext())
             {
-                if (!DoesMailboxExist(mailboxName))
-                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
                 var movedMailRship = db.MailboxesToMails
                     .FirstOrDefault(m => m.MailboxName == mailboxName && m.MailId == mailId);
-                if (movedMailRship == null)
-                    throw new DatabaseException($"Mail id {mailId} not found");
                 movedMailRship.FolderId = folderId;
                 db.SaveChanges();
             }
@@ -188,7 +184,7 @@ namespace MailDatabase
             where T: ILetterType, new()
         {
             if (!DoesMailboxExist(mailboxName))
-                throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
+                throw new ArgumentException();
             return new T().GetLettersFromFolder(mailboxName);
         }
 
@@ -198,7 +194,7 @@ namespace MailDatabase
             {
                 var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (mail == null)
-                    throw new DatabaseException($"Mail id {mailId} not found");
+                    throw new ArgumentException();
                 return (mail.Title, mail.Content.Substring(0, 40), mail.SenderMBName, mail.SendingTime);
             }
         }
@@ -209,7 +205,7 @@ namespace MailDatabase
             {
                 var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (mail == null)
-                    throw new DatabaseException($"Mail id {mailId} not found");
+                    throw new ArgumentException();
                 return mail.Content;
             }
         }
@@ -220,7 +216,7 @@ namespace MailDatabase
             {
                 var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (mail == null)
-                    throw new DatabaseException($"Mail id {mailId} not found");
+                    throw new ArgumentException();
                 return JsonSerializer.Deserialize<string[]>(mail.ReceiversMBNames);
             }
         }
@@ -230,7 +226,7 @@ namespace MailDatabase
             using (DatabaseContext db = new DatabaseContext())
             {
                 if (!DoesMailboxExist(mailboxName))
-                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
+                    throw new ArgumentException();
                 return db.FolderIdsToNames
                     .Where(x => x.MailboxName == mailboxName)
                     .Select(x => x.FolderId);
@@ -242,153 +238,12 @@ namespace MailDatabase
             using (DatabaseContext db = new DatabaseContext())
             {
                 if (!DoesMailboxExist(mailboxName))
-                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
+                    throw new ArgumentException("Mailbox doesn't exist");
                 var rship = db.FolderIdsToNames
                     .FirstOrDefault(x => x.MailboxName == mailboxName && x.FolderId == folderId);
                 if (rship == null)
-                    throw new DatabaseException("Folder doesn't exist");
+                    throw new ArgumentException("Folder doesn't exist");
                 return rship.FolderName;
-            }
-        }
-
-        public static void AddCurrency(string userLogin, int delta)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
-                if (user == null)
-                    throw new DatabaseException($"User {userLogin} doesn't exist");
-                user.CurrencyAmount += delta;
-                db.SaveChanges();
-            }
-        }
-
-        public static int GetCurrency(string userLogin)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
-                if (user == null)
-                    throw new DatabaseException($"User {userLogin} doesn't exist");
-                return user.CurrencyAmount;
-            }
-        }
-
-        public static byte GetTier(string userLogin)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
-                if (user == null)
-                    throw new DatabaseException($"User {userLogin} doesn't exist");
-                return user.Tier;
-            }
-        }
-
-        public static DateTime GetTierEndDate(string userLogin)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
-                if (user == null)
-                    throw new DatabaseException($"User {userLogin} doesn't exist");
-                return user.TierEndDate;
-            }
-        }
-
-        public static TimeSpan GetTrashTimer(string mailboxName)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var mailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName ==mailboxName);
-                if (mailbox == null)
-                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
-                return mailbox.TrashTimer;
-            }
-        }
-
-        public static void SetTier(string userLogin, byte tier, DateTime endDate)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
-                if (user == null)
-                    throw new DatabaseException($"User {userLogin} doesn't exist");
-                user.Tier = tier;
-                user.TierEndDate = endDate;
-                db.SaveChanges();
-            }
-        }
-
-        public static void UpdateTier(string userLogin)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
-                if (user == null)
-                    throw new DatabaseException($"User {userLogin} doesn't exist");
-                if (DateTime.Now > user.TierEndDate)
-                    user.Tier = 0;
-                db.SaveChanges();
-            }
-        }
-
-        public static void UpdateTierForAll()
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                foreach (var user in db.Users)
-                    if (DateTime.Now > user.TierEndDate)
-                        user.Tier = 0;
-                db.SaveChanges();
-            }
-        }
-
-        public static void SetTrashTimer(string mailboxName, TimeSpan timer)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var mailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
-                if (mailbox == null)
-                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
-                mailbox.TrashTimer = timer;
-                db.SaveChanges();
-            }
-        }
-
-        public static void DeleteTimedOutTrash(string mailboxName)
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                var mailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
-                if (mailbox == null)
-                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
-                foreach (var mail in db.MailboxesToMails
-                    .Where(r => r.MailboxName == mailboxName && r.FolderId == 2)
-                    .Select(r => db.Mails.First(m => m.MailId == r.MailId)))
-                {
-                    if (mail.SendingTime + mailbox.TrashTimer > DateTime.Now)
-                        db.Mails.Remove(mail);
-                }
-                db.SaveChanges();
-            }
-        }
-
-        public static void DeleteAllTimedOutTrash()
-        {
-            using (DatabaseContext db = new DatabaseContext())
-            {
-                Dictionary<string, TimeSpan> timers = new Dictionary<string, TimeSpan>();
-                foreach (var mailbox in db.Mailboxes)
-                    timers.Add(mailbox.MailboxName, mailbox.TrashTimer);
-                foreach (var rship in db.MailboxesToMails
-                    .Where(r => r.FolderId == 2))
-                {
-                    var mail = db.Mails.First(m => m.MailId == rship.MailId);
-                    if (mail.SendingTime + timers[rship.MailboxName] > DateTime.Now)
-                        db.Mails.Remove(mail);
-                }
-                db.SaveChanges();
             }
         }
     }
