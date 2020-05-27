@@ -2,41 +2,16 @@
 using Microsoft.AspNetCore.Mvc;
 using MailDatabase;
 using System;
-<<<<<<< Updated upstream
-
-=======
 using Microsoft.AspNetCore.Http;
 using MailDatabase.Exceptions;
->>>>>>> Stashed changes
+using System.Linq;
 namespace GachiMail.Views.Register
 {
     public class RegisterController : Controller
     {
-        public IActionResult Index(string message)
+        public IActionResult Index(int? code)
         {
             return View();
-        }
-        public IActionResult MailboxCreate(string user, int? code)
-        {
-            if (code != null)
-                ViewData["ErrorMessage"] = "Mailbox already exists.";
-            ViewData["User"] = user;
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult MBGo(string mailbox, string user)
-        {
-            try
-            {
-                DatabaseOperations.AddMailbox(user, mailbox);
-            }
-            catch(Exception ex)
-            {
-                if (ex is ArgumentException)
-                    return RedirectToAction("MailboxCreate", "Register", new { user = user, code = 0 });
-            }
-            return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming"});
         }
 
         [HttpPost]
@@ -44,29 +19,26 @@ namespace GachiMail.Views.Register
         {
             if (user.Password != passconf)
             {
-                return RedirectToAction
-                    ("Index", 
-                    "Register", 
-                    new { message = "Passwords don't match"});
+                HttpContext.Session.SetString("ErrorMessage", "Passwords don't match");
+                return RedirectToAction("Index", "Register");
             }
-            else
+            try
             {
-<<<<<<< Updated upstream
-                try
-                {
-                    DatabaseOperations.AddUser(user.Login, user.Password);
-                }
-                catch(Exception ex)
-                {
-                    if (ex is ArgumentException && ex.Message == $"User {user.Login} already exists")
-                        return RedirectToAction("Index", "Register", new { code = 0 });
-                }
-                return RedirectToAction("MailboxCreate", "Register", new { user = user.Login });
-=======
-                if (ex is DatabaseException)
-                    return RedirectToAction("Index", "Register", new { message = ex.Message });
->>>>>>> Stashed changes
+                DatabaseOperations.AddUser(user.Login, user.Password);
             }
+            catch (Exception ex)
+            {
+                if (ex is DatabaseException)
+                {
+                    HttpContext.Session.SetString("ErrorMessage", ex.Message);
+                    return RedirectToAction("Index", "Register");
+                }     
+            }
+            if (HttpContext.Session.Keys.Contains("ErrorMessage"))
+                HttpContext.Session.Remove("ErrorMessage");
+            HttpContext.Session.SetString("LI", "true");
+            HttpContext.Session.SetString("User", user.Login);
+            return RedirectToAction("MailboxCreate", "Mailbox", new { user = user.Login });
         }
     }
 }

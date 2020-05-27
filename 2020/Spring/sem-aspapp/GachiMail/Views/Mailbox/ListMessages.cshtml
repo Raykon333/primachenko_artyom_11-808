@@ -3,24 +3,9 @@
     ViewData["Title"] = "ListMessages";
 }
 
-<p></p>
+<p>@ViewData["MessageType"]</p>
 <div class="list-group">
-<<<<<<< Updated upstream
     <input type="checkbox" name="selectall" />
-    @foreach (var prev in Model)
-    {
-        <p>
-            <a class="nav-link text-dark border-bottom" asp-area="" asp-controller="Letter" asp-action="Index" asp-route-id="@prev.Id">
-                <b>@prev.Title </b>
-                <text>@prev.ContentPreview </text>
-=======
-    <input type="checkbox" name="selectall" />@using(Html.BeginForm("WriteLetter", "Letter"))
-    {
-        <input type="submit" 
-               size= 3
-               height= 2
-               value="Write"/>
-    }
     <ul>
        @foreach (var prev in Model)
         {
@@ -32,8 +17,8 @@
                 asp-action="Index"
                 asp-route-id="@prev.Id">
                 @prev.Title
->>>>>>> Stashed changes
             </a>
-        </p>
-    }
+        </li>
+        }
+    </ul>
 </div>

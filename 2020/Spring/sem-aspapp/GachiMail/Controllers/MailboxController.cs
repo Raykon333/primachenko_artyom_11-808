@@ -1,50 +1,51 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
+using GachiMail.Utilities;
 using MailDatabase;
-using MailDatabase.Exceptions;
+using GachiMail.Models;
 using MailDatabase.LetterTypes;
-<<<<<<< Updated upstream
+using Microsoft.AspNetCore.Http;
 using System;
 using System.Reflection;
-=======
-using GachiMail.Utilities;
-using GachiMail.Models;
-
->>>>>>> Stashed changes
+using MailDatabase.Exceptions;
 namespace GachiMail.Controllers
 {
     public class MailboxController : MailAccountController
     {
-        private byte[] user
+        private string user
         {
             get
             {
-                byte[] res;
-                HttpContext.Session.TryGetValue("User", out res);
-                return res;
+                return HttpContext.Session.GetString("User");
             }
         }
-        private byte[] box
+        private string box
         {
             get
             {
-                byte[] res;
-                HttpContext.Session.TryGetValue("Box", out res);
-                if (res == null)
-                    res = ByteToASCIIEncoder
-                        .WriteToBytes(DatabaseOperations
-                        .GetMailboxesByUser(ByteToASCIIEncoder
-                        .ReadFromBytes(user))
-                        .FirstOrDefault());
-                return res;
+                if (!HttpContext.Session.Keys.Contains("Box"))
+                   return DatabaseOperations
+                        .GetMailboxesByUser(user)
+                        .FirstOrDefault();
+                return HttpContext.Session.GetString("Box");
             }
         }
         public IActionResult Index()
         {
-            return View();
+            return View(DatabaseOperations.GetMailboxesByUser(HttpContext.Session.GetString("User")));
         }
+        public IActionResult ProceedToMailbox(string mailbox)
+        {
+            if (box == null)
+                return RedirectToAction("MailboxCreate", new { user = user });
+            if (mailbox == null)
+                mailbox = box;
+            if (box != mailbox)
+                HttpContext.Session.SetString("Box", mailbox);
+            return RedirectToAction("ListMessages", new { mtype = "Incoming"});
+        }
+
+
         public IActionResult ListMessages(string mtype)
         {
             return (IActionResult)GetType().GetMethod(mtype).Invoke(this, null);
@@ -53,7 +54,7 @@ namespace GachiMail.Controllers
         public IActionResult Incoming()
         {
             var links = DatabaseOperations
-               .GetMailIdsFromFolder<IncomingLetters>(ByteToASCIIEncoder.ReadFromBytes(box))
+               .GetMailIdsFromFolder<IncomingLetters>(box)
                .Select(a => new LetterPreview(a))
                .ToList();
             ViewData["MessageType"] = "Incoming";
@@ -63,14 +64,12 @@ namespace GachiMail.Controllers
         public IActionResult Sent()
         {
             var links = DatabaseOperations
-                .GetMailIdsFromFolder<SentLetters>(ByteToASCIIEncoder.ReadFromBytes(box))
+                .GetMailIdsFromFolder<SentLetters>(box)
                 .Select(a => new LetterPreview(a))
                 .ToList();
             ViewData["MessageType"] = "Sent";
             return View("ListMessages", links);
         }
-<<<<<<< Updated upstream
-=======
 
         public IActionResult MailboxCreate()
         {
@@ -86,10 +85,14 @@ namespace GachiMail.Controllers
             catch (Exception ex)
             {
                 if (ex is DatabaseException)
+                {
+                    HttpContext.Session.SetString("ErrorMessage", ex.Message);
                     return RedirectToAction("MailboxCreate", "Mailbox");
+                }
             }
-            return RedirectToAction("ProceedToMailbox", "Mailbox");
+            if (HttpContext.Session.Keys.Contains("ErrorMessage"))
+                HttpContext.Session.Remove("ErrorMessage");
+            return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
         }
->>>>>>> Stashed changes
     }
 }

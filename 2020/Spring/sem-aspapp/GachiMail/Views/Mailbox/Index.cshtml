@@ -1,17 +1,14 @@
-﻿
+﻿@model List<string>
 @{
     ViewData["Title"] = "Index";
 }
 
-<<<<<<< Updated upstream
-<h1>Index</h1>
-=======
 <p>Mailboxes</p>
 <div class="list-group">
-   @using (Html.BeginForm("MailboxCreate", "Mailbox"))
+   @using (Html.BeginForm("MailboxCreate", "Mailbox", new { user = Context.Session.GetString("User") }))
     {
         <input type="submit"
-           size= 4
+           size="4"
            value="Create new mailbox"/>
     }
     <ul>
@@ -29,5 +26,4 @@
         }
     </ul>
 </div>
->>>>>>> Stashed changes
 

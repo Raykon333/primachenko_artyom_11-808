@@ -4,17 +4,14 @@
 
 <h3>Create your First Mailbox</h3>
 <form method="post">
-<<<<<<< Updated upstream:2020/Spring/sem-aspapp/GachiMail/Views/Register/MailboxCreate.cshtml
     <label>Mailbox name^</label><br />
     <input type="text" name="mailbox" /><br /><br />
     <input type="hidden" name="user" value = @ViewData["User"] />
     <input type="submit" asp-controller="Register" asp-action="MBGo" value="Create" />
-=======
     <label>Mailbox name:</label><br />
     <input type="text" name="mailbox" /><text>@@gachimail.com</text><br /><br />
     <input type="hidden" name="user" value = @Context.Session.GetString("User") />
     <input type="submit" asp-controller="Mailbox" asp-action="MBGo" value="Create" />
->>>>>>> Stashed changes:2020/Spring/sem-aspapp/GachiMail/Views/Mailbox/MailboxCreate.cshtml
 </form>
 @await Html.PartialAsync("Error")
 

@@ -12,8 +12,6 @@ namespace GachiMail.Controllers
             ViewData["Mail"] = new Letter(id);
             return View();
         }
-<<<<<<< Updated upstream
-=======
         public IActionResult WriteLetter()
         {
             return View();
@@ -30,6 +28,5 @@ namespace GachiMail.Controllers
             DatabaseOperations.SendMail(Title, Content, DateTime.Now, Sender, rec);
             return RedirectToAction("ListMessages", "Mailbox", new { mtype = "Incoming" });
         }
->>>>>>> Stashed changes
     }
 }
