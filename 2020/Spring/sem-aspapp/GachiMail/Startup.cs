@@ -49,7 +49,6 @@ namespace GachiMail
 
             app.UseRouting();
             app.UseSession();
-            app.UseMvc();
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
