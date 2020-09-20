@@ -5,16 +5,16 @@ using System.Text;
 
 namespace MailDatabase.Models
 {
-    class FolderIdToName
+    public class FolderIdToName
     {
         [Column(Order = 0)]
-        public string MailboxName { get; internal set; }
+        public string MailboxName { get; set; }
 
         [Column(Order = 1)]
-        public int FolderId { get; internal set; }
+        public int FolderId { get; set; }
 
         [Column(Order = 2)]
-        public string FolderName { get; internal set; }
+        public string FolderName { get; set; }
 
         public FolderIdToName() { }
 

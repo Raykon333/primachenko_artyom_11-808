@@ -1,0 +1,13 @@
+﻿@model ReadMailModel
+@{
+    ViewData["Title"] = "Index";
+}
+<p>Тема: @Model.Title</p>
+@foreach (var address in Model.Addresses)
+{
+    <text>@address</text><text>@@gachimail.com;</text><br />
+}
+<br />
+<p>Содержимое</p>
+<p>@Model.Content</p>
+

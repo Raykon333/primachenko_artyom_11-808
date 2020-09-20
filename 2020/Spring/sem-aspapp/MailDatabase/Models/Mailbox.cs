@@ -5,13 +5,13 @@ using System.Linq;
 
 namespace MailDatabase.Models
 {
-    class Mailbox
+    public class Mailbox
     {
         [Column(Order = 0)]
-        public string MailboxName { get; internal set; }
+        public string MailboxName { get; set; }
 
         [Column(Order = 1)]
-        public TimeSpan TrashTimer { get; internal set; }
+        public TimeSpan TrashTimer { get; set; }
 
         public Mailbox() { }
 

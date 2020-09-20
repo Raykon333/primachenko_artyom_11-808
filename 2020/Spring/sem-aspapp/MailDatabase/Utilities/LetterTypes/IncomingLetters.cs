@@ -1,4 +1,4 @@
-﻿using System;
+﻿/*using System;
 using System.Collections.Generic;
 using System.Linq;
 namespace MailDatabase.LetterTypes
@@ -8,7 +8,7 @@ namespace MailDatabase.LetterTypes
         public IEnumerable<int> GetLettersFromFolder(string mailbox)
         {
             var answ = new List<int>();
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var list = db.MailboxesToMails
                     .Where(x => x.MailboxName == mailbox && x.FolderId == 0)
@@ -19,4 +19,4 @@ namespace MailDatabase.LetterTypes
             return answ;
         }
     }
-}
+}*/

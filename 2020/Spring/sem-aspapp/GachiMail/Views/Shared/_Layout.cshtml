@@ -1,85 +1,157 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Http
+@inject IHttpContextAccessor HttpContextAccessor
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - OurMail</title>
+    <title>@ViewData["Title"] - GachiMail</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
+
+    <style>
+        .container {
+            margin-left: 0;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .navbar{
+            z-index: 4;
+            height: 10%;
+        }
+
+        .footer{
+            z-index: 3;
+            background-color: #F9F9F9;
+        }
+
+        .sidenav {
+          height: 100%;
+          margin-top: 2%;
+          width: 250px;
+          position: fixed;
+          z-index: 2;
+          top: 0;
+          left: 0;
+          background-color: #EEEEEE;
+          overflow-x: hidden;
+          padding-top: 20px;
+        }
+
+        .sidenav a {
+          padding: 6px 6px 6px 10px;
+          text-decoration: none;
+          font-size: 20px;
+          color: #818181;
+          display: block;
+        }
+
+        .sidenav a:hover {
+          background-color: #E0E0E0;
+        }
+
+        .main {
+            margin-left: 250px;
+            z-index: 1;
+        }
+
+        .bottom {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+        } 
+    </style>
+
 </head>
 <body>
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-light border-bottom box-shadow mb-3">
             <div class="container">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">OurMail</a>
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">GachiMail</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
-                    @if (Context.Session.Keys.Contains("User"))
+                    @if (User.Identity.IsAuthenticated)
                     {
+                        <form method="post" asp-controller="Account" asp-action="Logout">
+                            <input type="submit" value="Выход" class="btn btn-outline-dark"/>
+                        </form>
                         <div class="navbar-nav flex-grow-0">
                             <a class="nav-link text-dark"
                                asp-area=""
                                asp-controller="Mailbox"
-                               asp-action="Index"> @Context.Session.GetString("User") </a>
+                               asp-action="Index"> @User.Identity.Name </a>
                         </div>
+                        @if (HttpContextAccessor.HttpContext.Session.GetString("Box") != null)
+                        {
+                            <div class="navbar-nav flex-grow-0">
+                                <a class="nav-link text-dark"
+                                   asp-controller="Mailbox"
+                                   asp-action="Folder"> @(HttpContextAccessor.HttpContext.Session.GetString("Box")+"@gachimail.com")</a>
+                            </div>
+                        }
                     }
                     else
                     {
                         <ul class="navbar-nav flex-grow-2">
                             <li class="nav-item">
                                 <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="Login"
-                                   asp-action="Index">Login</a>
+                                   asp-controller="Account"
+                                   asp-action="Login">Вход</a>
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link text-dark"
-                                   asp-area=""
-                                   asp-controller="Register"
-                                   asp-action="Index">Register</a>
+                                   asp-controller="Account"
+                                   asp-action="Register">Регистрация</a>
                             </li>
                         </ul>
                     }
+                    <a class="nav-link text-dark border-bottom"
+                       asp-controller="Home"
+                       asp-action="Privacy">Карта</a>
                 </div>
             </div>
         </nav>
     </header>
-    @if (Context.Session.Keys.Contains("User"))
+    @if (User.Identity.IsAuthenticated && HttpContextAccessor.HttpContext.Session.GetString("Box") != null)
     {
-        <div class="dropdown-menu-left border-right position-fixed dropleft">
+        <div class="sidenav">
             <menu>
                 <menuitem class="nav-item">
                     <a class="nav-link text-dark border-bottom"
-                       asp-area=""
-                       asp-controller="Mailbox"
-                       asp-action="ListMessages"
-                       asp-route-mtype="Incoming">Incoming</a>
+                       asp-controller="Mail"
+                       asp-action="New">Написать письмо</a>
                 </menuitem>
                 <menuitem class="nav-item">
                     <a class="nav-link text-dark border-bottom"
-                       asp-area=""
                        asp-controller="Mailbox"
-                       asp-action="ListMessages"
-                       asp-route-mtype="Sent">Sent</a>
+                       asp-action="Folder"
+                       asp-route-folder="0">Входящие</a>
+                </menuitem>
+                <menuitem class="nav-item">
+                    <a class="nav-link text-dark border-bottom"
+                       asp-controller="Mailbox"
+                       asp-action="Folder"
+                       asp-route-folder="1">Исходящие</a>
                 </menuitem>
             </menu>
         </div>
     }
-
     <div class="container">
-        <main role="main" class="pb-3 position-fixed">
+        <main role="main" class="pb-3 position-fixed main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <!--<footer class="border-top footer text-muted">
         <div class="container">
             &copy; 2020 - GachiMail - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
         </div>
-    </footer>
+    </footer>-->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

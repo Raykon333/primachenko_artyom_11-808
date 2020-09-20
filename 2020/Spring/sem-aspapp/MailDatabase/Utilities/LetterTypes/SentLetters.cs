@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+﻿/*using System.Collections.Generic;
 using System.Linq;
 namespace MailDatabase.LetterTypes
 {
@@ -18,4 +18,4 @@ namespace MailDatabase.LetterTypes
             return answ;
         }
     }
-}
+}*/

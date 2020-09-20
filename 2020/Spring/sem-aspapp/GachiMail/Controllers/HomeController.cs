@@ -7,9 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using GachiMail.Models;
 using GachiMail.Utilities;
+using Microsoft.AspNetCore.Mvc.Filters;
+using System.Text.Json;
+using Microsoft.AspNetCore.Http;
+
 namespace GachiMail.Controllers
 {
-    public class HomeController : MailAccountController
+    public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
         public HomeController(ILogger<HomeController> logger)
@@ -19,7 +23,10 @@ namespace GachiMail.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            if (User.Identity.IsAuthenticated)
+                return RedirectToAction("Profile", "Account");
+            else
+                return RedirectToAction("Login", "Account");
         }
 
         public IActionResult Privacy()

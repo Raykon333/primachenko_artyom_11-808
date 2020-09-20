@@ -1,0 +1,153 @@
+﻿using GachiMail.Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
+using System;
+
+namespace GachiMail.Controllers
+{
+    public class AccountController : Controller
+    {
+        IDatabaseService db;
+
+        public AccountController(IDatabaseService database)
+        {
+            db = database;
+        }
+
+        [HttpGet]
+        public IActionResult Login()
+        {
+            if (User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Mailbox");
+            return View();
+        }
+        [HttpPost]
+        public async Task<IActionResult> Login(LoginModel loginData, bool saveCookies)
+        {
+            if (User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Mailbox");
+            if (!db.DoesUserExist(loginData.Login))
+                ModelState.AddModelError("Login", "Пользователя не существует");
+            else if (!db.PasswordCheck(loginData.Login, loginData.Password))
+                ModelState.AddModelError("Password", "Пароль неверен");
+            if (ModelState.IsValid)
+            {
+                await Authenticate(loginData.Login);
+                return RedirectToAction("ProceedToMailbox", "Mailbox");
+            }
+            else
+                return View(loginData);
+        }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            if (User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Mailbox");
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterModel regModel)
+        {
+            if (User.Identity.IsAuthenticated)
+                return RedirectToAction("Index", "Mailbox");
+            if (db.DoesUserExist(regModel.Login))
+                ModelState.AddModelError("Login", "Пользователь уже существует");
+            if (ModelState.IsValid)
+            {
+                db.AddUser(regModel.Login, regModel.Password);
+                await Authenticate(regModel.Login);
+                return RedirectToAction("NewMailbox", "Account");
+            }
+            return View(regModel);
+        }
+
+        private async Task Authenticate(string login)
+        {
+            if (login == "admin")
+            {
+                db.ChangeRole("admin", "admin");
+            }
+
+            // создаем один claim
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimsIdentity.DefaultNameClaimType, login),
+                new Claim(ClaimsIdentity.DefaultRoleClaimType, db.GetRole(login)),
+                new Claim("Tier", db.GetTier(login).ToString())
+            };
+            // создаем объект ClaimsIdentity
+            ClaimsIdentity id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
+            // установка аутентификационных куки
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
+        }
+
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return RedirectToAction("Login", "Account");
+        }
+
+        [Authorize]
+        [HttpGet]
+        public IActionResult NewMailbox()
+        {
+            return View();
+        }
+
+        [Authorize]
+        [HttpPost]
+        public IActionResult NewMailbox(NewMailboxModel model)
+        {
+            if (db.DoesMailboxExist(model.MailboxName))
+                ModelState.AddModelError("MailboxName", "Ящик с таким названием уже существует.");
+            if (ModelState.IsValid)
+            {
+                db.AddMailbox(User.Identity.Name, model.MailboxName);
+                return RedirectToAction("ProceedToMailbox", "Mailbox");
+            }
+            return View(model);
+        }
+
+        [HttpGet]
+        public IActionResult Profile()
+        {
+            var login = User.Identity.Name;
+            var currency = db.GetCurrency(login);
+            var expiration = db.GetTierEndDate(login) - DateTime.Now;
+            var tier = db.GetTier(login);
+            if (tier > 0 && expiration < TimeSpan.Zero)
+            {
+                tier = 0;
+                db.SetTier(login, 0, DateTime.Now);
+            }
+
+            var mailboxes = db.GetMailboxesByUser(login).ToArray();
+            return View(new ProfileModel(login, tier, expiration, currency, mailboxes));
+        }
+
+        [HttpPost]
+        public IActionResult AddCurrency(int currency)
+        {
+            db.AddCurrency(User.Identity.Name, currency);
+            return RedirectToAction("Profile");
+        }
+
+        public IActionResult UpgradeToTier1(ProfileModel model)
+        {
+            if (model.Currency >= 100)
+            {
+                db.SetTier(model.Login, 1, DateTime.Now + TimeSpan.FromSeconds(30));
+                db.AddCurrency(model.Login, -100);
+            }
+            return RedirectToAction("Profile");
+        }
+    }
+}

@@ -1,0 +1,35 @@
+﻿@model string
+@using MailDatabase;
+@using Microsoft.EntityFrameworkCore;
+
+<style>
+    table {
+        border-color: black;
+        border: 2px;
+    }
+
+    td, th {
+        border: 1px solid black;
+        text-align: left;
+        padding: 4px;
+    }
+</style>
+
+@{
+    using (DatabaseContext db = new DatabaseContext(Model))
+    {
+<table align="left">
+    <tr>
+        <th>Логин</th>
+        <th>Роль</th>
+    </tr>
+    @foreach (var user in db.Users)
+    {
+        <tr>
+            <td>@user.UserLogin</td>
+            <td>@user.Role</td>
+        </tr>
+    }
+</table>
+        }
+    }

@@ -4,13 +4,13 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MailDatabase.Models
 {
-    class UserToMailboxes
+    public class UserToMailboxes
     {
         [Column(Order = 0)]
-        public string UserLogin { get; internal set; }
+        public string UserLogin { get; set; }
 
         [Column(Order = 1)]
-        public string MailboxName { get; internal set; }
+        public string MailboxName { get; set; }
 
         public UserToMailboxes() { }
 

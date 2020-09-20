@@ -1,32 +1,41 @@
-﻿/*using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text.Json;
 using System.Linq;
+using MailDatabase;
 using MailDatabase.Models;
 using MailDatabase.LetterTypes;
 using MailDatabase.Exceptions;
+using GachiMail.Models;
 
-namespace MailDatabase
+namespace GachiMail
 {
-    public static class DatabaseOperations
+    public class PsqlDatabase : IDatabaseService
     {
-        private static Func<string, string> DefaultPasswordHashFunction =
-            password =>
-            {
-                byte[] salt;
-                new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
-                var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000);
-                byte[] hash = pbkdf2.GetBytes(20);
-                byte[] hashBytes = new byte[36];
-                Array.Copy(salt, 0, hashBytes, 0, 16);
-                Array.Copy(hash, 0, hashBytes, 16, 20);
-                return Convert.ToBase64String(hashBytes);
-            };
+        string cs;
 
-        public static bool PasswordCheck(string userLogin, string password)
+        public PsqlDatabase(string connectionString)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            cs = connectionString;
+        }
+
+        private Func<string, string> DefaultPasswordHashFunction =
+            password =>
+        {
+            byte[] salt;
+            new RNGCryptoServiceProvider().GetBytes(salt = new byte[16]);
+            var pbkdf2 = new Rfc2898DeriveBytes(password, salt, 10000);
+            byte[] hash = pbkdf2.GetBytes(20);
+            byte[] hashBytes = new byte[36];
+            Array.Copy(salt, 0, hashBytes, 0, 16);
+            Array.Copy(hash, 0, hashBytes, 16, 20);
+            return Convert.ToBase64String(hashBytes);
+        };
+
+        public bool PasswordCheck(string userLogin, string password)
+        {
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (!DoesUserExist(userLogin))
                     throw new DatabaseException("User doesn't exist");
@@ -38,30 +47,30 @@ namespace MailDatabase
                 byte[] hash = pbkdf2.GetBytes(20);
                 for (int i = 0; i < 20; i++)
                     if (hashBytes[i + 16] != hash[i])
-                        throw new DatabaseException();
+                        return false;
                 return true;
             }
         }
 
-        public static bool DoesUserExist(string userLogin)
+        public bool DoesUserExist(string userLogin)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 return db.Users.Any(user => user.UserLogin == userLogin);
             }
         }
 
-        public static bool DoesMailboxExist(string mailboxName)
+        public bool DoesMailboxExist(string mailboxName)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 return db.Mailboxes.Any(box => box.MailboxName == mailboxName);
             }
         }
 
-        public static void AddUser(string login, string password)
+        public void AddUser(string login, string password)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (DoesUserExist(login))
                     throw new DatabaseException($"User {login} already exists");
@@ -71,9 +80,9 @@ namespace MailDatabase
             }
         }
 
-        public static void AddMailbox(string userLogin, string mailboxName)
+        public void AddMailbox(string userLogin, string mailboxName)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (db.Mailboxes.Any(mailbox => mailbox.MailboxName == mailboxName))
                     throw new DatabaseException($"Name {mailboxName} is already taken.");
@@ -86,9 +95,9 @@ namespace MailDatabase
         }
 
         //Приватный метод, используемый в методе SendMail
-        private static void AddMail(string mailboxName, int mailId, int folderId)
+        private void AddMail(string mailboxName, int mailId, int folderId)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (!db.Mailboxes.Any(mailbox => mailbox.MailboxName == mailboxName))
                     throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
@@ -99,10 +108,10 @@ namespace MailDatabase
             }
         }
 
-        public static void SendMail(string title, string content, 
+        public void SendMail(string title, string content,
             DateTime sendingTime, string senderMBname, params string[] receiversMBnames)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (receiversMBnames == null)
                     throw new DatabaseException("Can't send to no one");
@@ -111,15 +120,15 @@ namespace MailDatabase
                 db.SaveChanges();
 
                 AddMail(senderMBname, newMail.MailId, 1);
-                foreach(var receiver in receiversMBnames)
+                foreach (var receiver in receiversMBnames)
                     AddMail(receiver, newMail.MailId, 0);
                 db.SaveChanges();
             }
         }
 
-        public static List<string> GetMailboxesByUser(string userLogin)
+        public List<string> GetMailboxesByUser(string userLogin)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (!DoesUserExist(userLogin))
                     throw new DatabaseException($"User {userLogin} doesn't exist.");
@@ -130,9 +139,9 @@ namespace MailDatabase
             }
         }
 
-        public static void DeleteUser(string userLogin)
+        public void DeleteUser(string userLogin)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var deletedUser = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
                 if (deletedUser == null)
@@ -142,9 +151,9 @@ namespace MailDatabase
             }
         }
 
-        public static void DeleteMailbox(string mailboxName)
+        public void DeleteMailbox(string mailboxName)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var deletedMailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
                 if (deletedMailbox == null)
@@ -156,9 +165,9 @@ namespace MailDatabase
             }
         }
 
-        public static void DeleteMail(int mailId)
+        public void DeleteMail(int mailId)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var deletedMail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (deletedMail == null)
@@ -170,9 +179,9 @@ namespace MailDatabase
             }
         }
 
-        public static void MoveMailToFolder(string mailboxName, int mailId, int folderId)
+        public void MoveMailToFolder(string mailboxName, int mailId, int folderId)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (!DoesMailboxExist(mailboxName))
                     throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
@@ -185,28 +194,45 @@ namespace MailDatabase
             }
         }
 
-        public static IEnumerable<int> GetMailIdsFromFolder<T>(string mailboxName)
-            where T: ILetterType, new()
+        public IEnumerable<int> GetMailIdsFromFolder(string mailboxName, int folderId)
         {
             if (!DoesMailboxExist(mailboxName))
                 throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
-            return new T().GetLettersFromFolder(mailboxName);
+            var result = new List<int>();
+            using (DatabaseContext db = new DatabaseContext(cs))
+            {
+                var list = db.MailboxesToMails
+                    .Where(x => x.MailboxName == mailboxName && x.FolderId == folderId)
+                    .Select(x => x.MailId);
+                foreach (var i in list)
+                    result.Add(i);
+            }
+            return result;
         }
 
-        public static (string Title, string ContentPreview, string Sender, DateTime SendingTime) GetMailPreview(int mailId)
+        public MailPreview GetMailPreview(int mailId)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (mail == null)
                     throw new DatabaseException($"Mail id {mailId} not found");
-                return (mail.Title, mail.Content.Substring(0, Math.Min(40, mail.Content.Length)), mail.SenderMBName, mail.SendingTime);
+                var contentPreview = mail.Content.Substring(0, Math.Min(40, mail.Content.Length));
+                if (mail.Content.Length > 40)
+                    contentPreview += "...";
+                return new MailPreview(
+                    mail.MailId, 
+                    mail.Title, 
+                    contentPreview, 
+                    mail.SenderMBName, 
+                    JsonSerializer.Deserialize<string[]>(mail.ReceiversMBNames),
+                    mail.SendingTime);
             }
         }
 
-        public static string GetMailContent(int mailId)
+        public string GetMailContent(int mailId)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (mail == null)
@@ -215,9 +241,9 @@ namespace MailDatabase
             }
         }
 
-        public static string[] GetMailReceivers(int mailId)
+        public string[] GetMailReceivers(int mailId)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var mail = db.Mails.FirstOrDefault(m => m.MailId == mailId);
                 if (mail == null)
@@ -226,9 +252,9 @@ namespace MailDatabase
             }
         }
 
-        public static IEnumerable<int> GetFoldersInMailbox(string mailboxName)
+        public IEnumerable<int> GetFoldersInMailbox(string mailboxName)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (!DoesMailboxExist(mailboxName))
                     throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
@@ -238,9 +264,9 @@ namespace MailDatabase
             }
         }
 
-        public static string GetFolderName(string mailboxName, int folderId)
+        public string GetFolderName(string mailboxName, int folderId)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 if (!DoesMailboxExist(mailboxName))
                     throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
@@ -252,9 +278,9 @@ namespace MailDatabase
             }
         }
 
-        public static void AddCurrency(string userLogin, int delta)
+        public void AddCurrency(string userLogin, int delta)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
                 if (user == null)
@@ -264,9 +290,9 @@ namespace MailDatabase
             }
         }
 
-        public static int GetCurrency(string userLogin)
+        public int GetCurrency(string userLogin)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
                 if (user == null)
@@ -275,9 +301,9 @@ namespace MailDatabase
             }
         }
 
-        public static byte GetTier(string userLogin)
+        public byte GetTier(string userLogin)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
                 if (user == null)
@@ -286,9 +312,9 @@ namespace MailDatabase
             }
         }
 
-        public static DateTime GetTierEndDate(string userLogin)
+        public DateTime GetTierEndDate(string userLogin)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
                 if (user == null)
@@ -297,20 +323,20 @@ namespace MailDatabase
             }
         }
 
-        public static TimeSpan GetTrashTimer(string mailboxName)
+        public TimeSpan GetTrashTimer(string mailboxName)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
-                var mailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName ==mailboxName);
+                var mailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
                 if (mailbox == null)
                     throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
                 return mailbox.TrashTimer;
             }
         }
 
-        public static void SetTier(string userLogin, byte tier, DateTime endDate)
+        public void SetTier(string userLogin, byte tier, DateTime endDate)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
                 if (user == null)
@@ -321,9 +347,9 @@ namespace MailDatabase
             }
         }
 
-        public static void UpdateTier(string userLogin)
+        public void UpdateTier(string userLogin)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
                 if (user == null)
@@ -334,9 +360,9 @@ namespace MailDatabase
             }
         }
 
-        public static void UpdateTierForAll()
+        public void UpdateTierForAll()
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 foreach (var user in db.Users)
                     if (DateTime.Now > user.TierEndDate)
@@ -345,9 +371,9 @@ namespace MailDatabase
             }
         }
 
-        public static void SetTrashTimer(string mailboxName, TimeSpan timer)
+        public void SetTrashTimer(string mailboxName, TimeSpan timer)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var mailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
                 if (mailbox == null)
@@ -357,9 +383,9 @@ namespace MailDatabase
             }
         }
 
-        public static void DeleteTimedOutTrash(string mailboxName)
+        public void DeleteTimedOutTrash(string mailboxName)
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 var mailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
                 if (mailbox == null)
@@ -375,9 +401,9 @@ namespace MailDatabase
             }
         }
 
-        public static void DeleteAllTimedOutTrash()
+        public void DeleteAllTimedOutTrash()
         {
-            using (DatabaseContext db = new DatabaseContext())
+            using (DatabaseContext db = new DatabaseContext(cs))
             {
                 Dictionary<string, TimeSpan> timers = new Dictionary<string, TimeSpan>();
                 foreach (var mailbox in db.Mailboxes)
@@ -392,5 +418,36 @@ namespace MailDatabase
                 db.SaveChanges();
             }
         }
+
+        public bool MailboxContains(string mailboxName, int mailId)
+        {
+            using (DatabaseContext db = new DatabaseContext(cs))
+            {
+                return db.MailboxesToMails.Any(r => r.MailboxName == mailboxName && r.MailId == mailId);
+            }
+        }
+
+        public void ChangeRole(string userLogin, string newRole)
+        {
+            using (DatabaseContext db = new DatabaseContext(cs))
+            {
+                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
+                if (user == null)
+                    throw new DatabaseException($"User {userLogin} doesn't exist.");
+                user.Role = newRole;
+                db.SaveChanges();
+            }
+        }
+
+        public string GetRole(string userLogin)
+        {
+            using (DatabaseContext db = new DatabaseContext(cs))
+            {
+                var user = db.Users.FirstOrDefault(u => u.UserLogin == userLogin);
+                if (user == null)
+                    throw new DatabaseException($"User {userLogin} doesn't exist.");
+                return db.Users.First(u => u.UserLogin == userLogin).Role;
+            }
+        }
     }
-}*/
+}

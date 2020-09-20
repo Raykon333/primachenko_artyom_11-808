@@ -3,16 +3,16 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MailDatabase.Models
 {
-    class MailboxToMails
+    public class MailboxToMails
     {
         [Column(Order = 0)]
-        public string MailboxName { get; internal set; }
+        public string MailboxName { get; set; }
 
         [Column(Order = 1)]
-        public int MailId { get; internal set; }
+        public int MailId { get; set; }
 
         [Column(Order = 2)]
-        public int FolderId { get; internal set; }
+        public int FolderId { get; set; }
 
         public MailboxToMails() { }
 

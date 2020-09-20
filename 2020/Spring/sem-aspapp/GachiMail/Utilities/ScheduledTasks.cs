@@ -8,16 +8,23 @@ namespace GachiMail
 {
     internal class ScheduledTasks
     {
-        public static void UpdateTierLevels()
+        IDatabaseService db;
+
+        internal ScheduledTasks(IDatabaseService database)
         {
-            MailDatabase.DatabaseOperations.UpdateTierForAll();
-            BackgroundJob.Schedule(() => UpdateTierLevels(),
-                DateTime.Today.AddDays(1) - DateTime.Now);
+            db = database;
         }
 
-        public static void ClearTrash()
+        public void UpdateTierLevels()
         {
-            MailDatabase.DatabaseOperations.DeleteAllTimedOutTrash();
+            db.UpdateTierForAll();
+            BackgroundJob.Schedule(() => UpdateTierLevels(),
+                TimeSpan.FromSeconds(11));
+        }
+
+        public void ClearTrash()
+        {
+            db.DeleteAllTimedOutTrash();
             BackgroundJob.Schedule(() => ClearTrash(),
                 DateTime.Today.AddDays(1) - DateTime.Now);
         }

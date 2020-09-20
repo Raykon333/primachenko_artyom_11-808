@@ -5,11 +5,11 @@
 
 <p>Mailboxes</p>
 <div class="list-group">
-   @using (Html.BeginForm("MailboxCreate", "Mailbox"))
+   @using (Html.BeginForm("NewMailbox", "Account"))
     {
         <input type="submit"
            size="4"
-           value="Create new mailbox"/>
+           value="Создать новый ящик"/>
     }
     <ul>
        @foreach (var prev in Model)

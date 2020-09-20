@@ -1,0 +1,45 @@
+﻿@model ProfileModel
+
+<h2>Профиль</h2>
+<p>@("Логин: " + Model.Login)</p>
+<p>@("Кошелёк: " + Model.Currency + " у.е.")</p>
+@await Html.PartialAsync("~/Views/Partial/AddCurrency.cshtml", new AddCurrencyModel(0))
+@Html.ActionLink("Повысить уровень подписки до 1 (100 у.е.)", "UpgradeToTier1", "Account", new ProfileModel(
+    Model.Login,
+    Model.Tier,
+    Model.Expiration,
+    Model.Currency,
+    Model.Mailboxes))
+<p>@("Уровень подписки: " + Model.Tier)</p>
+@if (Model.Expiration.CompareTo(TimeSpan.Zero) > 0)
+{
+    <p>@("До истечения: " +
+    Model.Expiration.Days + " дней, " +
+    Model.Expiration.Hours + " часов, " +
+    Model.Expiration.Minutes + " минут, " +
+    Model.Expiration.Seconds + " секунд")</p>
+}
+
+<div class="list-group">
+    <p>Почтовые ящики:</p>
+    <ul>
+        @foreach (var mailbox in Model.Mailboxes)
+        {
+            <li>
+                <a class="nav-link text-dark border-bottom"
+                   asp-controller="Mailbox"
+                   asp-action="ProceedToMailbox"
+                   asp-route-mailbox="@mailbox">
+                    @mailbox<text>@@gachimail.com</text>
+                </a>
+            </li>
+        }
+    </ul>
+    @using (Html.BeginForm("NewMailbox", "Account"))
+    {
+        <input type="submit"
+               size="4"
+               value="Создать новый ящик"
+               class="btn btn-outline-dark" />
+    }
+</div>

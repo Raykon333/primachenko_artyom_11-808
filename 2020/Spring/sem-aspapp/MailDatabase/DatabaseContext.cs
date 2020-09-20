@@ -3,21 +3,16 @@ using Npgsql.EntityFrameworkCore.PostgreSQL;
 using MailDatabase.Models;
 namespace MailDatabase
 {
-    internal class DatabaseContext : DbContext
+    public class DatabaseContext : DbContext
     {
-        readonly static string Host = "localhost";
-        readonly static string Port = "5432";
-        readonly static string DatabaseName = "MailDb";
-        readonly static string Username = "postgres";
-        readonly static string Password = "ja2min31";
-        public readonly static string ConnectionString = $"Host={Host};Port={Port};Database={DatabaseName};Username={Username};Password={Password}";
+        string ConnectionString;
 
-        internal DbSet<User> Users { get; set; }
-        internal DbSet<Mailbox> Mailboxes { get; set; }
-        internal DbSet<Mail> Mails { get; set; }
-        internal DbSet<UserToMailboxes> UsersToMailboxes { get; set; }
-        internal DbSet<MailboxToMails> MailboxesToMails { get; set; }
-        internal DbSet<FolderIdToName> FolderIdsToNames { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<Mailbox> Mailboxes { get; set; }
+        public DbSet<Mail> Mails { get; set; }
+        public DbSet<UserToMailboxes> UsersToMailboxes { get; set; }
+        public DbSet<MailboxToMails> MailboxesToMails { get; set; }
+        public DbSet<FolderIdToName> FolderIdsToNames { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -45,7 +40,7 @@ namespace MailDatabase
                 .HasIndex(o => o.UserLogin);
 
             modelBuilder.Entity<MailboxToMails>()
-                .HasKey(o => new { o.MailboxName, o.MailId });
+                .HasKey(o => new { o.MailboxName, o.MailId, o.FolderId });
             modelBuilder.Entity<MailboxToMails>()
                 .HasIndex(o => o.MailboxName);
             modelBuilder.Entity<MailboxToMails>()
@@ -57,8 +52,9 @@ namespace MailDatabase
                 .HasIndex(o => o.MailboxName);
         }
 
-        public DatabaseContext()
+        public DatabaseContext(string connectionString)
         {
+            ConnectionString = connectionString;
             Database.EnsureCreated();
         }
 

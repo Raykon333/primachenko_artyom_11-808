@@ -1,7 +1,10 @@
+using GachiMail.Controllers;
 using Hangfire;
 using Hangfire.PostgreSql;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -24,12 +27,26 @@ namespace GachiMail
             services.AddSession();
             services.AddDistributedMemoryCache();
 
-            services.AddHangfire(config =>
-                config.UsePostgreSqlStorage(Configuration.GetConnectionString("HangfireConnection")));
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options => //CookieAuthenticationOptions
+                {
+                    options.LoginPath = new Microsoft.AspNetCore.Http.PathString("/Account/Login");
+                    options.AccessDeniedPath = new Microsoft.AspNetCore.Http.PathString("/Mailbox/Index");
+                });
+
+            services.AddMemoryCache();
+            services.AddResponseCompression();
+
+            services.AddSingleton<IDatabaseService, PsqlDatabase>(x => new PsqlDatabase(
+                Configuration.GetConnectionString("PsqlConnection")));
+            //services.AddHangfire(config =>
+                //config.UsePostgreSqlStorage(Configuration.GetConnectionString("HangfireConnection")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory factory)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory factory, IDatabaseService db)
         {
             if (env.IsDevelopment())
             {
@@ -44,19 +61,24 @@ namespace GachiMail
             app.UseHttpsRedirection();
             app.UseStaticFiles();
 
-            app.UseHangfireServer();
-            app.UseHangfireDashboard();
+            //app.UseHangfireServer();
+            //app.UseHangfireDashboard();
+
+            //new ScheduledTasks(db).ClearTrash();
+            //new ScheduledTasks(db).UpdateTierLevels();
 
             app.UseRouting();
             app.UseSession();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllerRoute(
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
-            ScheduledTasks.ClearTrash();
-            ScheduledTasks.UpdateTierLevels();
         }
     }
 }
