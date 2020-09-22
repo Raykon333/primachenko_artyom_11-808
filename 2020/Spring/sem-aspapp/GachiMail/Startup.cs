@@ -1,14 +1,14 @@
-using GachiMail.Controllers;
-using Hangfire;
-using Hangfire.PostgreSql;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using System;
+
 namespace GachiMail
 {
     public class Startup
@@ -39,12 +39,16 @@ namespace GachiMail
             services.AddMemoryCache();
             services.AddResponseCompression();
 
+            services.Configure<SecurityStampValidatorOptions>(options =>
+            {
+                options.ValidationInterval = TimeSpan.Zero;
+            });
+
             services.AddSingleton<IDatabaseService, PsqlDatabase>(x => new PsqlDatabase(
                 Configuration.GetConnectionString("PsqlConnection")));
             //services.AddHangfire(config =>
                 //config.UsePostgreSqlStorage(Configuration.GetConnectionString("HangfireConnection")));
         }
-
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, ILoggerFactory factory, IDatabaseService db)
         {
@@ -55,7 +59,6 @@ namespace GachiMail
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
             app.UseHttpsRedirection();

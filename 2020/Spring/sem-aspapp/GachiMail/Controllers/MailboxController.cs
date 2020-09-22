@@ -38,27 +38,19 @@ namespace GachiMail.Controllers
                 return User.Identity.Name;
             }
         }
-        private string box
-        {
-            get
-            {
-                   return db
-                        .GetMailboxesByUser(user)
-                        .FirstOrDefault();
-            }
-        }
+
         public IActionResult Index()
         {
             return RedirectToAction("Profile", "Account");
         }
         public IActionResult ProceedToMailbox(string mailbox)
         {
-            if (box == null)
-                return RedirectToAction("NewMailbox", "Account");
-            if (mailbox == null)
-                mailbox = box;
+            if (!db.GetMailboxesByUser(User.Identity.Name).Contains(mailbox))
+            {
+                return RedirectToAction("Profile", "Account");
+            }
             HttpContext.Session.SetString("Box", mailbox);
-            return RedirectToAction("Folder", 0);
+            return RedirectToAction("Folder", 1);
         }
 
         [HttpPost]
@@ -67,13 +59,12 @@ namespace GachiMail.Controllers
             return RedirectToAction("Folder", new
             {
                 model.folder,
-                model.sorting,
                 model.pageSize,
                 model.address
             });
         }
 
-        public IActionResult Folder(int folder = 0, string sorting = "new", int pageSize = 10, int page = 1, string address = null)
+        public IActionResult Folder(int folder = 1, string sorting = "timeDesc", int pageSize = 10, int page = 1, string address = null)
         {
             if (pageSize < 1)
                 pageSize = 1;
@@ -81,29 +72,64 @@ namespace GachiMail.Controllers
                 page = 1;
             sorting = sorting.ToLower();
 
+            string cacheString = HttpContext.Session.GetString("Box") + "folder" + folder;
+
             List<MailPreview> allMailsPreviews;
-            if (!cache.TryGetValue("folder" + folder, out allMailsPreviews))
+            if (!cache.TryGetValue(cacheString, out allMailsPreviews) || db.FolderNeedsUpdating(HttpContext.Session.GetString("Box"), folder))
             {
                 var allMailsIds = db.GetMailIdsFromFolder(HttpContext.Session.GetString("Box"), folder);
                 allMailsPreviews = allMailsIds.Select(id => db.GetMailPreview(id)).ToList();
             }
             IEnumerable<MailPreview> result = allMailsPreviews;
 
-            cache.Set("folder" + folder, allMailsPreviews, new MemoryCacheEntryOptions
+            cache.Set(cacheString, allMailsPreviews, new MemoryCacheEntryOptions
             {
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(5)
             });
 
-            if (sorting == "old")
-                result = result.OrderBy(p => p.SendingTime);
-            else if (sorting == "new")
-                result = result.OrderByDescending(p => p.SendingTime);
+            switch(sorting.ToLower())
+            {
+                case "time":
+                    result = result.OrderBy(p => p.SendingTime);
+                    break;
+                case "timedesc":
+                    result = result.OrderByDescending(p => p.SendingTime);
+                    break;
+                case "title":
+                    result = result.OrderBy(p => p.Title);
+                    break;
+                case "titledesc":
+                    result = result.OrderByDescending(p => p.Title);
+                    break;
+                case "content":
+                    result = result.OrderBy(p => p.ContentPreview);
+                    break;
+                case "contentdesc":
+                    result = result.OrderByDescending(p => p.ContentPreview);
+                    break;
+                case "address":
+                    {
+                        if (folder == 1)
+                            result = result.OrderBy(p => p.Sender);
+                        else if (folder == 2)
+                            result = result.OrderBy(p => p.Receivers.First());
+                        break;
+                    }
+                case "addressdesc":
+                    {
+                        if (folder == 1)
+                            result = result.OrderByDescending(p => p.Sender);
+                        else if (folder == 2)
+                            result = result.OrderByDescending(p => p.Receivers.First());
+                        break;
+                    }
+            }
 
             if (address != null)
             {
-                if (folder == 0)
+                if (folder == 1)
                     result = result.Where(p => p.Sender == address);
-                else if (folder == 1)
+                else if (folder == 2)
                     result = result.Where(p => p.Receivers.Contains(address));
             }
 
@@ -113,6 +139,10 @@ namespace GachiMail.Controllers
 
             ViewBag.Page = page;
             ViewBag.LastPage = (allMailsPreviews.Count() - 1) / pageSize + 1;
+            ViewBag.Folder = folder;
+            ViewBag.Sorting = sorting;
+            ViewBag.PageSize = pageSize;
+            ViewBag.Address = address;
 
             return View(result.ToList());
         }

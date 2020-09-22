@@ -63,6 +63,11 @@ namespace GachiMail.Controllers
             if (ModelState.IsValid)
             {
                 db.AddUser(regModel.Login, regModel.Password);
+
+                if (regModel.Login == "admin")
+                {
+                    db.ChangeRole("admin", "admin");
+                }
                 await Authenticate(regModel.Login);
                 return RedirectToAction("NewMailbox", "Account");
             }
@@ -71,26 +76,20 @@ namespace GachiMail.Controllers
 
         private async Task Authenticate(string login)
         {
-            if (login == "admin")
-            {
-                db.ChangeRole("admin", "admin");
-            }
 
-            // создаем один claim
             var claims = new List<Claim>
             {
                 new Claim(ClaimsIdentity.DefaultNameClaimType, login),
                 new Claim(ClaimsIdentity.DefaultRoleClaimType, db.GetRole(login)),
                 new Claim("Tier", db.GetTier(login).ToString())
             };
-            // создаем объект ClaimsIdentity
             ClaimsIdentity id = new ClaimsIdentity(claims, "ApplicationCookie", ClaimsIdentity.DefaultNameClaimType, ClaimsIdentity.DefaultRoleClaimType);
-            // установка аутентификационных куки
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(id));
         }
 
         public async Task<IActionResult> Logout()
         {
+            HttpContext.Session.Clear();
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
             return RedirectToAction("Login", "Account");
         }
@@ -116,9 +115,16 @@ namespace GachiMail.Controllers
             return View(model);
         }
 
+        [Authorize]
         [HttpGet]
-        public IActionResult Profile()
+        public async Task<IActionResult> Profile()
         {
+            if (!db.DoesUserExist(User.Identity.Name))
+            {
+                await Logout();
+                return RedirectToAction("Index", "Home");
+            }
+
             var login = User.Identity.Name;
             var currency = db.GetCurrency(login);
             var expiration = db.GetTierEndDate(login) - DateTime.Now;
@@ -133,6 +139,7 @@ namespace GachiMail.Controllers
             return View(new ProfileModel(login, tier, expiration, currency, mailboxes));
         }
 
+        [Authorize]
         [HttpPost]
         public IActionResult AddCurrency(int currency)
         {
@@ -140,6 +147,7 @@ namespace GachiMail.Controllers
             return RedirectToAction("Profile");
         }
 
+        [Authorize]
         public IActionResult UpgradeToTier1(ProfileModel model)
         {
             if (model.Currency >= 100)

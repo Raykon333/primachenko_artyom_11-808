@@ -16,13 +16,17 @@ namespace MailDatabase.Models
         [Column(Order = 2)]
         public string FolderName { get; set; }
 
+        [Column(Order = 3)]
+        public bool NeedsUpdating { get; set; }
+
         public FolderIdToName() { }
 
-        public FolderIdToName(string mailboxName, int folderId, string folderName)
+        public FolderIdToName(string mailboxName, string folderName, int folderId)
         {
             MailboxName = mailboxName;
-            FolderId = folderId;
             FolderName = folderName;
+            FolderId = folderId;
+            NeedsUpdating = true;
         }
     }
 }

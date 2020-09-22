@@ -8,8 +8,16 @@ namespace GachiMail.Models
     public class MailboxOptionsModel
     {
         public int folder { get; set; }
-        public string sorting { get; set; }
         public int pageSize { get; set; }
         public string address { get; set; }
+
+        public MailboxOptionsModel() { }
+
+        public MailboxOptionsModel(int _folder, int _pageSize, string _address)
+        {
+            folder = _folder;
+            pageSize = _pageSize;
+            address = _address;
+        }
     }
 }

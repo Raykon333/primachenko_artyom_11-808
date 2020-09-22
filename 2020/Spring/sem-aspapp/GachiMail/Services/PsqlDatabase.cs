@@ -90,6 +90,9 @@ namespace GachiMail
                 var newUserToMailbox = new UserToMailboxes(userLogin, mailboxName);
                 db.Mailboxes.Add(newMailbox);
                 db.UsersToMailboxes.Add(newUserToMailbox);
+                CreateFolder(mailboxName, "Входящие");
+                CreateFolder(mailboxName, "Исходящие");
+                CreateFolder(mailboxName, "Корзина");
                 db.SaveChanges();
             }
         }
@@ -104,6 +107,7 @@ namespace GachiMail
 
                 var newMailboxToMail = new MailboxToMails(mailboxName, mailId, folderId);
                 db.MailboxesToMails.Add(newMailboxToMail);
+                db.FolderIdsToNames.Where(f => f.MailboxName == mailboxName && f.FolderId == folderId).First().NeedsUpdating = true;
                 db.SaveChanges();
             }
         }
@@ -119,9 +123,9 @@ namespace GachiMail
                 db.Mails.Add(newMail);
                 db.SaveChanges();
 
-                AddMail(senderMBname, newMail.MailId, 1);
+                AddMail(senderMBname, newMail.MailId, 2);
                 foreach (var receiver in receiversMBnames)
-                    AddMail(receiver, newMail.MailId, 0);
+                    AddMail(receiver, newMail.MailId, 1);
                 db.SaveChanges();
             }
         }
@@ -190,6 +194,7 @@ namespace GachiMail
                 if (movedMailRship == null)
                     throw new DatabaseException($"Mail id {mailId} not found");
                 movedMailRship.FolderId = folderId;
+                db.FolderIdsToNames.Where(f => f.MailboxName == mailboxName && f.FolderId == folderId).First().NeedsUpdating = true;
                 db.SaveChanges();
             }
         }
@@ -206,8 +211,21 @@ namespace GachiMail
                     .Select(x => x.MailId);
                 foreach (var i in list)
                     result.Add(i);
+                db.FolderIdsToNames.Where(f => f.MailboxName == mailboxName && f.FolderId == folderId).First().NeedsUpdating = false;
+                db.SaveChanges();
             }
             return result;
+        }
+
+        public void CreateFolder(string mailboxName, string folderName)
+        {
+            using (DatabaseContext db = new DatabaseContext(cs))
+            {
+                var entry = new FolderIdToName(mailboxName, folderName, 
+                    db.FolderIdsToNames.Where(e => e.MailboxName == mailboxName).Count() + 1);
+                db.FolderIdsToNames.Add(entry);
+                db.SaveChanges();
+            }
         }
 
         public MailPreview GetMailPreview(int mailId)
@@ -447,6 +465,20 @@ namespace GachiMail
                 if (user == null)
                     throw new DatabaseException($"User {userLogin} doesn't exist.");
                 return db.Users.First(u => u.UserLogin == userLogin).Role;
+            }
+        }
+
+        public bool FolderNeedsUpdating(string mailboxName, int folderId)
+        {
+            using (DatabaseContext db = new DatabaseContext(cs))
+            {
+                var mailbox = db.Mailboxes.FirstOrDefault(b => b.MailboxName == mailboxName);
+                if (mailbox == null)
+                    throw new DatabaseException($"Mailbox {mailboxName} doesn't exist.");
+                var folder = db.FolderIdsToNames.FirstOrDefault(f => f.MailboxName == mailboxName && f.FolderId == folderId);
+                if (folder == null)
+                    throw new DatabaseException($"Folder with ID {folderId} doesn't exist in Mailbox {mailboxName}");
+                return folder.NeedsUpdating;
             }
         }
     }

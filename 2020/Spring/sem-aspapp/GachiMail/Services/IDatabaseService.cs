@@ -33,7 +33,9 @@ namespace GachiMail
         public IEnumerable<int> GetFoldersInMailbox(string mailboxName);
         public IEnumerable<int> GetMailIdsFromFolder(string mailboxName, int folderId);
 
+        public void CreateFolder(string mailboxName, string folderName);
         public string GetFolderName(string mailboxName, int folderId);
+        public bool FolderNeedsUpdating(string mailboxName, int folderId);
 
         public void AddCurrency(string userLogin, int delta);
         public int GetCurrency(string userLogin);

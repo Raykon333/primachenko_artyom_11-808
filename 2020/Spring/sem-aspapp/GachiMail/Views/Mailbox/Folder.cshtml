@@ -32,6 +32,18 @@
         text-align: left;
     }
 
+    th a{
+        padding: 5px;
+        display:block;
+        color: inherit;
+    }
+
+    th a:hover{
+        text-decoration: none;
+        color: inherit;
+        background-color: #E5E5E5;
+    }
+
     tr:hover {
         background-color: #f5f5f5;
     }
@@ -69,24 +81,14 @@
             }
 </style>
 
-@{var pars = Context.Request.Query;
-    int pageSize;
-    if (pars["pageSize"].Count == 0)
-        pageSize = 10;
-    else
-        pageSize = int.Parse(pars["pageSize"]);
-    string sorting = pars["sorting"];
-    string address = address = pars["address"];
-    int folder;
-    if (pars["folder"].Count == 0)
-        folder = 0;
-    else
-        folder = int.Parse(pars["folder"]);
-        }
+@{
+    int pageSize = ViewBag.PageSize;
+    string sorting = ViewBag.Sorting.ToLower();
+    string address = ViewBag.Address;
+    int folder = ViewBag.Folder; }
 @await Html.PartialAsync("~/Views/Partial/MailboxOptions.cshtml", new MailboxOptionsModel()
 {
     pageSize = pageSize,
-    sorting = sorting,
     address = address,
     folder = folder
 })
@@ -97,59 +99,89 @@
     }
     else
     {
-        <table align="left">
-            <colgroup>
-                <col span="1" style="width: 25%;">
-                <col span="1" style="width: 30%;">
-                <col span="1" style="width: 30%;">
-                <col span="1" style="width: 15%;">
-            </colgroup>
-            <tr>
-                <th>@(folder == 0 ? "Отправитель" : "Получатель")</th>
-                <th>Тема</th>
-                <th>Содержимое</th>
-                <th>Дата отправления</th>
-            </tr>
-            @foreach (var preview in Model)
+<table align="left">
+    <colgroup>
+        <col span="1" style="width: 25%;">
+        <col span="1" style="width: 30%;">
+        <col span="1" style="width: 30%;">
+        <col span="1" style="width: 15%;">
+    </colgroup>
+    <tr>
+        @{
+            var sortings = new[] { "address", "title", "content", "time" };
+            var header0 = folder == 1 ? "Отправитель" : "Получатель";
+            var headers = new[] { header0, "Тема", "Содержимое", "Дата отправления" };
+            for (int i = 0; i < headers.Length; i++)
             {
-                <tr>
-                    <td>
-                        <a href="@(Url.Action("Read", "Mail", new { id = preview.Id }))">
-                            @if (folder == 0)
-                            {
-                                @(preview.Sender + "@gachimail.com")
-                            }
-                            else
-                            {
-                                @(preview.Receivers[0] + "@gachimail.com (" + preview.Receivers.Length + ")")
-                            }
-                        </a>
-                    </td>
-                    <td>
-                        <a href="@(Url.Action("Read", "Mail", new { id = preview.Id }))">
-                            @preview.Title
-                        </a>
-                    </td>
-                    <td>
-                        <a href="@(Url.Action("Read", "Mail", new { id = preview.Id }))">
-                            @preview.ContentPreview
-                        </a>
-                    </td>
-                    <td>
-                        <a href="@(Url.Action("Read", "Mail", new { id = preview.Id }))">
-                            @preview.SendingTime
-                        </a>
-                    </td>
-                </tr>
+                string linkSort;
+                if (sorting == sortings[i] + "desc")
+                {
+                    linkSort = sortings[i];
+                    headers[i] += " ↑";
+                }
+                else if (sorting == sortings[i])
+                {
+                    linkSort = sortings[i] + "desc";
+                    headers[i] += " ↓";
+                }
+                else
+                {
+                    linkSort = sortings[i];
+                }
+                <th>
+                    <a href=@Url.Action("Folder", "Mailbox", new
+                    {
+                        folder = folder,
+                        sorting = linkSort,
+                        pageSize = pageSize,
+                        address = address
+                    })>
+                        @headers[i]
+                    </a>
+                </th>
             }
-        </table>
+                        }
+    </tr>
+    @foreach (var preview in Model)
+    {
+        <tr>
+            <td>
+                <a href="@(Url.Action("Read", "Mail", new { id = preview.Id }))">
+                    @if (folder == 1)
+                    {
+                        @(preview.Sender + "@gachimail.com")
+                    }
+                    else
+                            {
+                        @(preview.Receivers[0] + "@gachimail.com (" + preview.Receivers.Length + ")")
+                    }
+                </a>
+            </td>
+            <td>
+                <a href="@(Url.Action("Read", "Mail", new { id = preview.Id }))">
+                    @preview.Title
+                </a>
+            </td>
+            <td>
+                <a href="@(Url.Action("Read", "Mail", new { id = preview.Id }))">
+                    @preview.ContentPreview
+                </a>
+            </td>
+            <td>
+                <a href="@(Url.Action("Read", "Mail", new { id = preview.Id }))">
+                    @preview.SendingTime
+                </a>
+            </td>
+        </tr>
+    }
+</table>
         <div class="center">
             <div class="pagination">
                 @{
                     for (int i = 0; i <= ViewBag.LastPage + 1; i++)
                     {
                         string label = i.ToString();
-                        int redirPage = i;
+                    int redirPage = i;
                         if (i == 0)
                         {
                             label = "<";
@@ -161,17 +193,17 @@
                             redirPage = ViewBag.Page + 1;
                         }
 
-                        if ((i == 0 && ViewBag.Page == 1)
-                            || (i == ViewBag.LastPage + 1 && ViewBag.Page == ViewBag.LastPage))
-                        {
+            if ((i == 0 && ViewBag.Page == 1)
+                || (i == ViewBag.LastPage + 1 && ViewBag.Page == ViewBag.LastPage))
+            {
                             <p>@label</p>
                         }
-                        else
-                        {
+            else
+            {
                             <a class=@(i == ViewBag.Page ? "active" : "potential")
                                href="@(Url.Action("Folder", "Mailbox", new
                                  {
-                                     page = redirPage,
+                page = redirPage,
                                      pageSize = pageSize,
                                      sorting = sorting,
                                      sender = address,

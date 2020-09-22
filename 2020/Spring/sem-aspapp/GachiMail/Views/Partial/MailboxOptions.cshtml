@@ -7,13 +7,6 @@
             <input type="hidden" asp-for="folder" value="@Context.Request.Query["folder"]" />
         </div>
         <div class="form-group">
-            <label asp-for="sorting">Сортировка</label>
-            <select name="sorting" style="width: 50%" class="form-control">
-                <option value="new">Сначала новые</option>
-                <option value="old">Сначала старые</option>
-            </select>
-        </div>
-        <div class="form-group">
             <label asp-for="pageSize">Писем на странице</label>
             <input type="number" step="1" asp-for="pageSize" />
         </div>
