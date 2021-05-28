@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestingHW", "TestingHW\TestingHW.csproj", "{A97A649F-A442-46ED-AA8D-E373A467ACC5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "XMLGenerator", "..\..\..\my\XMLGenerator\XMLGenerator\XMLGenerator.csproj", "{F8E64120-028E-432B-884A-4DBB338BEF44}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A97A649F-A442-46ED-AA8D-E373A467ACC5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A97A649F-A442-46ED-AA8D-E373A467ACC5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A97A649F-A442-46ED-AA8D-E373A467ACC5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A97A649F-A442-46ED-AA8D-E373A467ACC5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8E64120-028E-432B-884A-4DBB338BEF44}.Debug|Any CPU.ActiveCfg = Release|Any CPU
+		{F8E64120-028E-432B-884A-4DBB338BEF44}.Debug|Any CPU.Build.0 = Release|Any CPU
+		{F8E64120-028E-432B-884A-4DBB338BEF44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8E64120-028E-432B-884A-4DBB338BEF44}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {5485F61F-DE39-405E-A6AA-D79DBDF55932}
+	EndGlobalSection
+EndGlobal

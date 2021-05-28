@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextEncoder", "TextEncoder\TextEncoder.csproj", "{4BDAF6D7-437B-4E70-A53E-394C9B913727}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4BDAF6D7-437B-4E70-A53E-394C9B913727}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BDAF6D7-437B-4E70-A53E-394C9B913727}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BDAF6D7-437B-4E70-A53E-394C9B913727}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BDAF6D7-437B-4E70-A53E-394C9B913727}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {96A07FD1-93D0-4280-8461-AA5E42F6FD76}
+	EndGlobalSection
+EndGlobal

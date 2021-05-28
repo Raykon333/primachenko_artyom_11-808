@@ -120,7 +120,7 @@ namespace TextCompression
                 }
                 string entryWord;
                 if (entry < dictLength)
-                    entryWord = Encoding.UTF8.GetString(new byte[] { (byte)entry });
+                    entryWord = Encoding.UTF8.GetString(BitConverter.GetBytes(entry));
                 else
                     entryWord = words[entry - dictLength];
                 string newWordPart = entryWord;
@@ -147,7 +147,7 @@ namespace TextCompression
                     if (entry == dictLength + i)
                         words.Add(newWordPart + newWordPart.First());
                     if (entry < dictLength)
-                        entryWord = Encoding.UTF8.GetString(new byte[] { (byte)entry });
+                        entryWord = Encoding.UTF8.GetString(BitConverter.GetBytes(entry));
                     else
                         entryWord = words[entry - dictLength];
                     if (entry != dictLength + i)

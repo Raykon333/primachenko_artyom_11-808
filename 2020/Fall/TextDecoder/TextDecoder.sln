@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TextDecoder", "TextDecoder\TextDecoder.csproj", "{C2A71953-6520-4314-9A4D-E4DA911927DD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C2A71953-6520-4314-9A4D-E4DA911927DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2A71953-6520-4314-9A4D-E4DA911927DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2A71953-6520-4314-9A4D-E4DA911927DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2A71953-6520-4314-9A4D-E4DA911927DD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {CC324F6E-0CFC-499E-A634-6AA21DD248F7}
+	EndGlobalSection
+EndGlobal
